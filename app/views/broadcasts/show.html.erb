@@ -1,0 +1,20 @@
+<!-- app/views/broadcasts/show.html.erb -->
+<h1>Broadcast Details</h1>
+
+<p>
+  <strong>Name:</strong>
+  <%= @broadcast.name %>
+</p>
+
+<p>
+  <strong>Video:</strong>
+  <%= @broadcast.video %>
+</p>
+
+<p>
+  <strong>Stream URL:</strong>
+  <%= @broadcast.stream_url %>
+</p>
+
+<%= link_to 'Edit', edit_broadcast_path(@broadcast) %> |
+<%= link_to 'Back', broadcasts_path %>

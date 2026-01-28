@@ -1,0 +1,201 @@
+<div class="banner">
+ 
+  <%= image_tag('logo.png', alt: 'Logo', class: 'logo') %>
+
+
+
+
+  
+</div>
+
+<!-- Banner topo -->
+<div class="user-banner">
+  <h1><i class="fas fa-users"></i> Gerenciamento de Usuários</h1>
+  <p class="subtitle">Administre contas e permissões dos usuários</p>
+</div>
+
+<table class="user-table">
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Tipo</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @users.each do |user| %>
+      <tr>
+        <td><%= user.email %></td>
+        <td><%= user.admin? ? 'Admin' : 'Cliente' %></td>
+        <td class="actions">
+          <%= link_to '✏️ Editar', edit_user_path(user), class: 'btn btn-edit-account' %>
+          <% unless user == current_user %>
+            <%= button_to '🗑️ Excluir', user_path(user), method: :delete, data: { confirm: 'Tem certeza?' }, class: 'btn btn-delete' %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<div class="new-user-btn">
+  <%= link_to '➕ Novo Usuário', new_user_path, class: 'btn btn-add' %>
+</div>
+
+
+<style>
+
+  .btn {
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+      background-color: #ff0000;
+      color: white;
+      border-radius: 5px;
+      font-size: 14px;
+      margin-top: -9px;
+      transition: background 0.3s ease;
+      text-decoration: none;
+      font-weight: bold;
+    }
+   
+    .btn-edit-account {
+      background-color: #2196F3;
+               }
+    
+    .btn-edit-account:focus {
+      background-color: #1e88e5;
+     }
+
+     .btn-edit-account:hover {
+      background-color: #0056b3;
+    }
+    
+    
+    /* Efeito de seleção de botão */
+    .btn:focus {
+      outline: none;
+    }
+    .btn-add{
+      background-color: #45a049; /* Cor do botão ao passar o mouse */
+      color: white;
+    }
+
+    .btn-add:hover {
+      background-color: #1e7e34;
+    }
+    
+    .btn-delete {
+      background-color: #dc3545;
+    }
+    
+    .btn-delete:hover {
+      background-color: #a71d2a;
+    }
+    
+    .new-user-btn {
+      text-align: center;
+      margin-top: 20px;
+    }
+body {
+    background-color: #f3f4f6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+.user-banner {
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    color: white;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    top: 61px;
+    height: 57px;
+    margin-bottom: 8%;
+}
+  
+  .user-banner h1 {
+    margin: 0;
+    font-size: 32px;
+  }
+  
+  .user-banner .subtitle {
+    margin-top: 8px;
+    font-size: 16px;
+    color: #e0e0e0;
+  }
+  
+  .user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .user-table th, .user-table td {
+    padding: 15px;
+    text-align: left;
+  }
+  
+  .user-table thead {
+    background-color: #282c34;
+    color: white;
+  }
+  
+  .user-table tr:nth-child(even) {
+    background-color: #f8f8f8;
+  }
+  
+  .user-table tr:hover {
+    background-color: #e2e6ea;
+  }
+  
+  .actions {
+       display: flex
+;
+    gap: 10px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+}
+  }
+  
+ 
+  
+ 
+  
+ 
+
+  
+
+
+
+  .banner {
+    width: 100%;
+      background-color: #cfcfd6;
+      text-align: center;
+      padding-top: 112px;
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+    }
+    
+    .banner .logo {
+      max-width: 200px;
+      height: auto;
+      position: fixed;
+      top: 10px;
+      right: 50%;
+      left: 42%;
+    }
+
+
+
+
+    </style>

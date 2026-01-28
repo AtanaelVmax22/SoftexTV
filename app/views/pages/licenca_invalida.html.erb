@@ -1,0 +1,15 @@
+<div style="text-align: center; padding: 100px;">
+  <img src="<%= asset_path('logo.png') %>" alt="Logo" style="max-width: 150px; margin-bottom: 30px;">
+  <h1 style="color: #d9534f;">Licença Inválida ou Expirada</h1>
+  <p style="font-size: 18px; color: #555;">Insira o token de licença para ativar o sistema:</p>
+
+  <%= form_with url: '/licenca', method: :post, local: true do %>
+    <input type="text" name="token" placeholder="Digite seu token" style="padding: 10px; width: 300px; border-radius: 5px;">
+    <br><br>
+    <button type="submit" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px;">Validar Licença</button>
+  <% end %>
+
+  <% if flash[:alert] %>
+    <p style="color: red; margin-top: 20px;"><%= flash[:alert] %></p>
+  <% end %>
+</div>

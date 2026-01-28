@@ -1,0 +1,10 @@
+<p style="color: green"><%= notice %></p>
+
+<%= render @streaming_configuration %>
+
+<div>
+  <%= link_to "Edit this streaming configuration", edit_streaming_configuration_path(@streaming_configuration) %> |
+  <%= link_to "Back to streaming configurations", streaming_configurations_path %>
+
+  <%= button_to "Destroy this streaming configuration", @streaming_configuration, method: :delete %>
+</div>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS-Style Calendar</title>
+    <style>
+    body {
+        margin-top: 37px;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background: black;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        height: 83vh;
+        overflow: hidden;
+    }
+    #day-number{
+    font-weight: bold;
+    font-size: 161px;
+    color: #df7f52;
+    }
+    #year{
+        font-size: 44px;
+    }
+        .date-container {
+            padding: 20px;
+            width: 100%;
+        }
+
+        .date-header {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .date-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .date-footer span {
+            display: block;
+        
+        }
+
+        .temperature {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            text-align: right;
+        }
+
+        .temperature .degree {
+            font-size: 96px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .temperature .city {
+            font-size: 24px;
+            font-weight: normal;
+            margin-top: -10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="date-container">
+        <div class="date-header" id="month-day"></div>
+    </div>
+    <div class="date-footer">
+        <span id="day-number"></span>
+        <span id="year"></span>
+    </div>
+    <div class="temperature">
+        <div class="degree" id="temperature">--°</div>
+        <div class="city">Recife</div>
+    </div>
+
+    <script>
+        // Função para obter e exibir a data
+        function updateDate() {
+            const now = new Date();
+
+            // Dados do calendário
+            const months = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+            const monthDay = `${months[now.getMonth()]} ${weekdays[now.getDay()]}`;
+            const dayNumber = now.getDate();
+            const year = now.getFullYear();
+
+            // Atualizar elementos no DOM
+            document.getElementById("month-day").textContent = monthDay;
+            document.getElementById("day-number").textContent = dayNumber;
+            document.getElementById("year").textContent = year;
+        }
+
+        // Atualizar a temperatura
+        async function updateTemperature() {
+            try {
+                const response = await fetch('/temperature');
+                const data = await response.json();
+        
+                console.log("Temperatura recebida:", data.temperature);  // Verifique o valor retornado
+        
+                document.getElementById("temperature").textContent = `${data.temperature}`;
+            } catch (error) {
+                console.error("Erro ao buscar a temperatura:", error);
+                document.getElementById("temperature").textContent = "--°";
+            }
+        }
+        
+
+        // Atualiza a data e temperatura ao carregar a página
+        updateDate();
+        updateTemperature();
+
+        // Atualiza a temperatura a cada 30 minutos
+        setInterval(updateTemperature, 30 * 60 * 1000);
+    </script>
+</body>
+</html>

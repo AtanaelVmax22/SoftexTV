@@ -1,0 +1,288 @@
+<!-- Banner no topo com logo -->
+
+<div class="banner">
+ 
+  <%= image_tag('logo.png', alt: 'Logo', class: 'logo') %>
+
+
+
+
+  <!-- Barra de ferramentas abaixo do banner -->
+  <div class="toolbar">
+    <%= link_to I18n.t('AddNewTV'), new_broadcast_path, class: "new-broadcast-button" %>
+
+    <!-- Formulário de exportação M3U -->
+     <% if current_user.admin? %>
+    <%= form_with(url: export_m3u_broadcasts_path, method: :get, local: true) do %>
+      <%= submit_tag I18n.t('Export M3U'), class: "export-m3u-button" %>
+    <% end %>
+    <%= link_to I18n.t('Configuration'), edit_streaming_configuration_path(1), class: "new-broadcast-button" %>
+    <% end %>
+  </div>
+</div>
+
+<h1 class="Broadcasts"><%= I18n.t('Broadcasts') %> </h1>
+
+<%= form_with(url: execute_broadcasts_path, method: :post, local: true, class: "broadcast-form") do %>
+  <div class="broadcasts-container smart-scroll">
+    <% @broadcasts.each do |broadcast| %>
+     <div class="broadcast-card mirror-effect scroll-section" data-broadcast-id="<%= broadcast.id %>">
+        <label class="card-checkbox">
+          <span class="card-title"><%= broadcast.name %></span>
+        </label>
+        <div class="video-container">
+          <video class="broadcast-video vjs-default-skin" autoplay muted>
+            <source src="<%= broadcast.stream_url %>" type="application/x-mpegURL">
+            Seu navegador não suporta a reprodução de vídeo.
+          </video>
+        </div>
+        
+        <!-- Exibindo o status: Online ou Offline -->
+        <div class="status-indicator <%= 'online' if broadcast.status == 'running' %><%= 'offline' if broadcast.status == 'stopped' %>">
+          <%= broadcast.status == 'running' ? 'Online' : 'Offline' %>
+        </div>
+
+        <!-- Rodapé com Botões de Controle -->
+        <div class="card-footer">
+          <%= form_with(url: start_broadcast_path(broadcast), method: :post, local: true) do %>
+            <%= submit_tag I18n.t('Play'), class: 'btn btn-play' %>
+          <% end %>
+
+          <%= form_with(url: stop_broadcast_path(broadcast), method: :post, local: true) do %>
+            <%= submit_tag I18n.t('Stop'), class: 'btn btn-stop' %>
+          <% end %>
+
+         <%= button_to I18n.t('Edit'), edit_broadcast_path(broadcast), method: :get, class: 'btn btn-edit' %>
+        </div>
+        <p class="name-video"><%= broadcast.video.filename.to_s %></p>
+
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Barra de Rodapé com Botão Play All Selected -->
+  <div class="footer-bar">
+  <p class="Versão"> Versão 1.0.9.0 </p>
+  <!-- <%= submit_tag 'Play Selected', class: "play-button" %> -->
+  <!-- <%= button_to 'Stop All', stop_all_broadcasts_path, method: :post, class: "stop-all-button" %>  -->
+  </div>
+<% end %>
+
+<!-- Desktop Upload Section -->
+<div class="broadcasts-container smart-scroll">
+  <h1 class="BroadcastsDesk"> <%= I18n.t('Broadcasts') %> </h1>
+  <div class="broadcast-card-desktop mirror-effect scroll-section" data-broadcast-id="desktop">
+    <label class="card-checkbox">
+      <span class="card-title"><%= I18n.t('Desktop') %></span>
+    </label>
+    <div class="upload-desktop">
+      <!-- Formulário para Adicionar Wallpaper -->
+      <%= form_with(url: wallpapers_path, method: :post, local: true, multipart: true, id: "wallpaper-upload-form") do %>
+        <%= file_field_tag :wallpaper, class: "upload-wallpaper" %>
+        <%= submit_tag I18n.t('Upload Wallpaper'), class: "set-wallpaper-button" %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+
+<!-- Adicionando a biblioteca Video.js se necessário -->
+<link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet" />
+<script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+<!-- Notificações -->
+<div id="notification-container" class="notification-container"></div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var players = document.querySelectorAll('.broadcast-video');
+    players.forEach(function(video) {
+      var player = videojs(video); // Inicializa o Video.js para cada vídeo
+
+      player.on('error', function() {
+        // O vídeo não pôde ser reproduzido, oculta o contêiner do vídeo
+        var videoContainer = video.parentElement; // Obtém o contêiner do vídeo
+        videoContainer.style.display = 'none'; // Esconde o contêiner
+      });
+
+      player.ready(function() {
+        // Configurações adicionais do player podem ser adicionadas aqui, se necessário
+      });
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const cards = document.querySelectorAll(".broadcast-card");
+
+    cards.forEach(card => {
+      card.addEventListener("click", (event) => {
+        // Remove a classe 'selected' de todos os cards
+        cards.forEach(c => {
+          c.classList.remove("selected");
+          c.classList.add("mirror-effect"); // Adiciona efeito espelho
+        });
+
+        // Adiciona a classe 'selected' ao card clicado
+        card.classList.add("selected");
+        card.classList.remove("mirror-effect"); // Remove efeito espelho
+
+        const broadcastId = card.getAttribute("data-broadcast-id");
+        const broadcastName = card.querySelector(".card-title").innerText;
+
+        // Impede a propagação do evento de clique para o documento
+        event.stopPropagation();
+      });
+    });
+
+    // Fecha o menu de edição ao clicar fora
+    document.addEventListener("click", (event) => {
+      const editMenu = document.getElementById("edit-menu");
+      if (!editMenu.contains(event.target)) {
+        editMenu.classList.add("hidden");
+        // Remove a classe 'selected' de todos os cards
+        cards.forEach(c => {
+          c.classList.remove("selected");
+          c.classList.add("mirror-effect"); // Adiciona efeito espelho
+        });
+      }
+    });
+
+    // Selecione todos os botões "Play"
+    const playButtons = document.querySelectorAll('.btn-play');
+    
+
+    playButtons.forEach(button => {
+      button.addEventListener('click', function(event) {
+        const broadcastId = button.getAttribute('data-broadcast-id');
+        const card = document.querySelector(`.broadcast-card[data-broadcast-id='${broadcastId}']`);
+        const videoContainer = card.querySelector('.video-container');
+        const video = videoContainer.querySelector('video');
+
+        // Pause todos os vídeos
+        const allVideos = document.querySelectorAll('.broadcast-video');
+        allVideos.forEach(v => v.pause());  // Pausa qualquer vídeo em execução
+
+        // Esconde todos os contêineres de vídeo
+        const allVideoContainers = document.querySelectorAll('.video-container');
+        allVideoContainers.forEach(container => container.style.display = 'none');
+
+        // Exibe o vídeo do broadcast selecionado
+        videoContainer.style.display = 'block';
+        video.play(); // Começa a reprodução do vídeo correspondente
+
+        // Impede a propagação do clique para o documento
+        event.stopPropagation();
+      });
+    });
+
+    // Lógica para o botão "Play Selected"
+    const playSelectedButton = document.querySelector('.play-button');
+    playSelectedButton.addEventListener('click', function(event) {
+      const selectedBroadcasts = document.querySelectorAll('.broadcast-card.selected');
+      selectedBroadcasts.forEach(card => {
+        const videoContainer = card.querySelector('.video-container');
+        const video = videoContainer.querySelector('video');
+
+        // Pausa todos os vídeos
+        const allVideos = document.querySelectorAll('.broadcast-video');
+        allVideos.forEach(v => v.pause());  // Pausa qualquer vídeo em execução
+
+        // Esconde todos os contêineres de vídeo
+        const allVideoContainers = document.querySelectorAll('.video-container');
+        allVideoContainers.forEach(container => container.style.display = 'none');
+
+        // Exibe o vídeo do broadcast selecionado
+        videoContainer.style.display = 'block';
+        video.play(); // Começa a reprodução do vídeo correspondente
+      });
+
+      event.stopPropagation();
+    });
+  });
+
+  // script scroll
+  document.addEventListener("DOMContentLoaded", function () {
+  const sections = Array.from(document.querySelectorAll(".scroll-section"));
+  let isAutoScrolling = false;
+  let lastScrollY = window.scrollY;
+  let scrollDirection = "down";
+
+  // Detecta a direção do scroll
+  window.addEventListener("scroll", () => {
+    const currentScrollY = window.scrollY;
+    scrollDirection = currentScrollY > lastScrollY ? "down" : "up";
+    lastScrollY = currentScrollY;
+  });
+
+  // Encontra o índice da seção mais próxima ao topo da janela
+  function getCurrentSectionIndex() {
+    const scrollY = window.scrollY;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    sections.forEach((section, index) => {
+      const distance = Math.abs(section.offsetTop - scrollY);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    return closestIndex;
+  }
+
+  let scrollTimeout;
+  window.addEventListener("scroll", function () {
+    if (isAutoScrolling) return;
+
+    clearTimeout(scrollTimeout);
+
+    scrollTimeout = setTimeout(() => {
+      const currentIndex = getCurrentSectionIndex();
+
+      let nextIndex;
+      if (scrollDirection === "down") {
+        nextIndex = Math.min(currentIndex + 50, sections.length - 5);
+      } else {
+        nextIndex = Math.max(currentIndex - 50, 0);
+      }
+
+      if (nextIndex !== currentIndex) {
+        isAutoScrolling = true;
+        sections[nextIndex].scrollIntoView({ behavior: "smooth", block: "start" });
+
+        setTimeout(() => {
+          isAutoScrolling = false;
+        }, 700); // evita múltiplos scrolls automáticos
+      }
+    }, 1000); // espera parar o scroll
+  });
+});
+
+// script notificação
+
+  document.addEventListener("DOMContentLoaded", function () {
+    <% if flash[:notice].present? %>
+      showNotification("<%= j flash[:notice] %>");
+    <% end %>
+
+    <% if flash[:alert].present? %>
+      showNotification("<%= j flash[:alert] %>");
+    <% end %>
+  });
+
+  function showNotification(message) {
+    const container = document.getElementById("notification-container");
+    const notification = document.createElement("div");
+    notification.className = "notification";
+    notification.innerText = message;
+
+    container.appendChild(notification);
+
+    setTimeout(() => {
+      notification.remove();
+    }, 4000);
+  }
+</script>

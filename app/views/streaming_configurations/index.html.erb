@@ -1,0 +1,15 @@
+<title>Configuração</title>
+<p style="color: green"><%= notice %></p>
+
+<h1>Streaming configurations</h1>
+
+<div id="streaming_configurations">
+  <% @streaming_configurations.each do |streaming_configuration| %>
+    <%= render streaming_configuration %>
+    <p>
+      <%= link_to "Show this streaming configuration", streaming_configuration %>
+    </p>
+  <% end %>
+</div>
+
+<%= link_to "New streaming configuration", new_streaming_configuration_path %>

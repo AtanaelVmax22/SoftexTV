@@ -1,0 +1,21 @@
+<!-- app/views/wallpapers/index.html.erb -->
+<h1>Wallpapers</h1>
+
+<div class="wallpapers-container">
+  <% @wallpapers.each do |wallpaper| %>
+    <div class="wallpaper">
+      <%= image_tag "/wallpapers/#{File.basename(wallpaper)}", alt: "Wallpaper" %>
+    </div>
+  <% end %>
+</div>
+
+<h2>Enviar novo wallpaper</h2>
+<%= form_with url: wallpapers_path, method: :post, multipart: true do |form| %>
+  <div>
+    <%= form.label :wallpaper %>
+    <%= form.file_field :wallpaper %>
+  </div>
+  <div>
+    <%= form.submit "Enviar Wallpaper" %>
+  </div>
+<% end %>

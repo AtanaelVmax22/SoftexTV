@@ -1,0 +1,135 @@
+<div class="banner">
+  <%= image_tag('logo.png', alt: 'Logo', class: 'logo') %>
+</div>
+
+<!-- Banner -->
+<div class="user-banner">
+  <h1><i class="fas fa-user-plus"></i> Novo Usuário</h1>
+  <p class="subtitle">Cadastre um novo usuário no sistema</p>
+</div>
+
+<div class="user-form-container">
+<%= form_with model: @user, url: users_path, local: true, class: 'user-form' do |form| %>
+
+    <% if @user.errors.any? %>
+      <div class="form-errors">
+        <h3><%= pluralize(@user.errors.count, "erro") %> impediram o cadastro:</h3>
+        <ul>
+          <% @user.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-field">
+      <%= form.label :email %>
+      <%= form.email_field :email, class: "input-field" %>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :password %>
+      <%= form.password_field :password, class: "input-field" %>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :password_confirmation, "Confirmação de Senha" %>
+      <%= form.password_field :password_confirmation, class: "input-field" %>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :admin, "Tipo de Usuário" %><br>
+      <%= form.select :admin, [["Cliente", false], ["Admin", true]], {}, class: "input-field" %>
+    </div>
+
+    <div class="form-actions">
+      <%= form.submit "Cadastrar", class: "submit-btn" %>
+    </div>
+  <% end %>
+</div>
+
+<div class="back-to-list">
+  <%= link_to "← Voltar para lista", users_path, class: "btn btn-secondary" %>
+</div>
+
+<style>
+  .user-banner {
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    color: white;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    top: 61px;
+    height: 57px;
+    margin-bottom: 8%;
+  }
+
+  .user-banner h1 {
+    margin: 0;
+    font-size: 32px;
+  }
+
+  .user-banner .subtitle {
+    margin-top: 8px;
+    font-size: 16px;
+    color: #e0e0e0;
+  }
+
+  .user-form-container {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    max-width: 500px;
+    margin: auto;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+
+  .user-form .form-field {
+    margin-bottom: 20px;
+  }
+
+  .user-form .input-field {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+  }
+
+  .form-actions {
+    text-align: center;
+  }
+
+  .submit-btn {
+    background-color: #28a745;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .submit-btn:hover {
+    background-color: #218838;
+  }
+
+  .back-to-list {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+  }
+
+  .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+</style>

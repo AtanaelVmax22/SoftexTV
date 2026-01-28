@@ -1,0 +1,115 @@
+/*
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS (and SCSS, if configured) file within this directory, lib/assets/stylesheets, or any plugin's
+ * vendor/assets/stylesheets directory can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
+ * compiled file so the styles you add here take precedence over styles defined in any other CSS
+ * files in this directory. Styles in this file should be added after the last require_* statement.
+ * It is generally better to create a new file per style scope.
+ *
+ *= require_tree .
+ *= require_self
+ */
+ .btn-conteiner-perfil {
+  display: flex
+  ;
+      justify-content: flex-start;
+      align-items: flex-start;
+      flex-direction: row;
+}
+ .container {
+    margin: 0;
+  padding: 0;
+  }
+  .fa-solid, .fas {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    margin-top: 10px;
+  }
+  
+
+
+.language {
+    position: fixed;
+      top: 8px;
+      z-index: 1002;
+      right: 10;
+    }
+    .perfil {
+      z-index: 1001;
+      position: fixed;
+      padding-left: 10px;
+      top: 0;
+    }
+    .text_language{
+    margin: 0;
+    }
+
+    .btn-manage_account {
+        padding: 5px 10px;
+        border: none;
+        cursor: pointer;
+        background-color: #ff0000;
+        color: white;
+        border-radius: 5px;
+        font-size: 14px;
+        margin-top: -9px;
+        transition: background 0.3s ease;
+        text-decoration: none;
+        font-weight: bold;
+        margin-right: 6px;
+      }
+
+      .btn-manage_account:focus{
+        outline: none;
+      }
+     .btn-manage_account:hover {
+        background-color: #c40000;
+      }
+
+      .btn-danger{
+        padding: 5px 10px;
+        border: none;
+        cursor: pointer;
+        background-color: #ff0000;
+        color: white;
+        border-radius: 5px;
+        font-size: 14px;
+        margin-top: -9px;
+        transition: background 0.3s ease;
+        text-decoration: none;
+        font-weight: bold;
+
+      }
+
+      .btn-danger:focus{
+        outline: none;
+      }
+      .btn-danger:hover{
+        background-color: #c40000;
+      }
+
+      .back-link {
+        color: #000000;
+        text-decoration: none;
+        background-color: white;
+        padding: 38px;
+        border-radius: 30px;
+        width: max-content;
+        box-shadow: 0px 1px 12px 5px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transform: scale(0.90);
+    }
+
+    .btn-nevegation{
+        width: -webkit-fill-available;
+    display: flex
+;
+    text-align: center;
+    justify-content: space-evenly;
+    position: relative;
+    top: 43px;
+    }

@@ -1,0 +1,156 @@
+
+<%# Página de login do Devise %>
+
+<div class="devise-login">
+<img src="<%= asset_path 'logo.png' %>" alt="Logo" style="height: 88px;
+    margin: 20px auto;
+    display: block;">
+  <h2>Login</h2>
+<% if flash.alert %>
+  <div class="alert-message">
+    <%= flash.alert %>
+  </div>
+<% end %>
+
+  <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+
+    <div>
+      <%= f.label :email %>
+      <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control" %>
+    </div>
+
+    <div>
+      <%= f.label :password %>
+      <%= f.password_field :password, autocomplete: "current-password", class: "form-control" %>
+    </div>
+
+    <% if devise_mapping.rememberable? %>
+      <div class="remember_me">
+        <%= f.check_box :remember_me %>
+        <%= f.label :remember_me %>
+      </div>
+    <% end %>
+
+    <div>
+      <%= f.submit "Login", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+
+  
+</div>
+
+<div class="footer-bar">
+  <p class="Versão"> Versão 1.0.8.0 </p>
+</div>
+
+
+
+<style>
+
+.remember_me{
+margin: 19px;
+  }
+/* Estilo global */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f3f4f6;
+  margin: auto;
+}
+
+/* Formulário de login */
+.devise-login {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  max-width: 400px;
+  margin: auto;
+  margin-top: 100px;
+}
+
+.devise-login h2 {
+  text-align: center;
+  color: #ae5f22;
+}
+
+.devise-login input[type="email"],
+.devise-login input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.devise-login input[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.devise-login input[type="submit"]:hover {
+  background-color: #218838;
+}
+
+/* Link para a tela de cadastro */
+.devise-login .back-link {
+  display: block;
+  margin-top: 20px;
+  text-align: center;
+  color: #000000;
+  text-decoration: none;
+  background-color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  width: 99px;
+  box-shadow: 0px 1px 12px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: scale(0.90);
+  position: relative;
+  left: 43%;
+}
+
+.devise-login .back-link:hover {
+  text-decoration: none; /* Remove o sublinhado */
+  color: #28a745;
+  transform: scale(1.05);
+}
+
+/* Estilo do rodapé */
+.footer-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ae5f22;
+  padding: 15px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  box-shadow: -2px -8px 10px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.footer-bar .play-button {
+  padding: 10px 20px;
+  background-color: #ffffff;
+  border: none;
+  color: #000000;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.footer-bar .play-button:hover {
+  background-color: #45a049;
+  color: white;
+}
+</style>

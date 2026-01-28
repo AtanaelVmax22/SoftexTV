@@ -1,0 +1,123 @@
+<div class="banner">
+ 
+  <%= image_tag('logo.png', alt: 'Logo', class: 'logo') %>
+
+
+
+
+  
+</div>
+
+
+
+<!-- Banner topo -->
+<div class="user-banner">
+  <h1><i class="fas fa-user-edit"></i> Editar Usuário</h1>
+  <p class="subtitle">Atualize os dados do usuário abaixo</p>
+</div>
+
+
+<div class="edit-user-form">
+  <%= form_with(model: @user, local: true) do |form| %>
+    <div class="field">
+      <%= form.label :email, "Email" %>
+      <%= form.email_field :email, class: "input-field", readonly: true %>
+    </div>
+
+    <div class="field">
+      <%= form.label :admin, "Tipo de Usuário" %><br>
+      <%= form.select :admin, [["Cliente", false], ["Admin", true]], {}, class: "input-field" %>
+    </div>
+
+    <div class="actions">
+      <%= form.submit "Salvar Alterações", class: "submit-btn" %>
+    </div>
+  <% end %>
+</div>
+
+<div class="back-to-list">
+  <%= link_to "← Voltar para lista", users_path, class: "btn btn-secondary" %>
+</div>
+
+
+<style>
+
+.user-banner {
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    color: white;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    top: 61px;
+    height: 57px;
+    margin-bottom: 8%;
+}
+  
+  .user-banner h1 {
+    margin: 0;
+    font-size: 32px;
+  }
+  
+  .user-banner .subtitle {
+    margin-top: 8px;
+    font-size: 16px;
+    color: #e0e0e0;
+  }
+  
+.edit-user-form {
+  max-width: 400px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  margin-top: 40px;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+
+.submit-btn {
+  width: 100%;
+  background-color: #28a745;
+  border: none;
+  padding: 10px;
+  color: white;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #218838;
+}
+
+.back-to-list {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+</style>
