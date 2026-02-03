@@ -6,13 +6,13 @@ class BroadcastsController < ApplicationController
 
   def index
     @broadcasts = Broadcast.all
-     # Buscar a configuração com id = 1
-     streaming_configuration = StreamingConfiguration.find_by(id: 1)
+    # Buscar a configuração com id = 1
+    streaming_configuration = StreamingConfiguration.find_by(id: 1)
 
-     if streaming_configuration
-       server_ip = streaming_configuration.server_ip
-       port = streaming_configuration.port
-     end
+    if streaming_configuration
+      server_ip = streaming_configuration.server_ip
+      port = streaming_configuration.port
+    end
   end
 
   def new
@@ -23,6 +23,7 @@ class BroadcastsController < ApplicationController
     @broadcast.destroy
     redirect_to broadcasts_path, notice: 'Broadcast was successfully deleted.'
   end
+  
   def show
     @broadcast = Broadcast.find(params[:id])
   end
@@ -39,7 +40,7 @@ class BroadcastsController < ApplicationController
     # Passar corretamente o parâmetro show_widgets
     if @broadcast.save
       @broadcast.update(
-        stream_url:  @stream_url,
+        stream_url: @stream_url,
         command: @broadcast.generate_command(@broadcast.show_widgets)  # Passando o show_widgets como argumento
       )
       redirect_to broadcasts_path, notice: 'Broadcast was successfully created.'
@@ -48,8 +49,6 @@ class BroadcastsController < ApplicationController
     end
   end
   
-  
-
   def edit
     @broadcast = Broadcast.find(params[:id])
     @schedules = @broadcast.schedules # Carregar os agendamentos vinculados ao Broadcast
@@ -61,7 +60,6 @@ class BroadcastsController < ApplicationController
         video: s.video.attached? ? s.video.filename.to_s : nil # <-- apenas o nome!
       }
     end
-    
   end
 
   def update
@@ -69,7 +67,6 @@ class BroadcastsController < ApplicationController
   
     if @broadcast.update(broadcast_params)
       @broadcast.update(command: @broadcast.generate_command(@broadcast.show_widgets))
-
       redirect_to broadcasts_path, notice: 'Broadcast was successfully updated.'
     else
       render :edit
@@ -124,7 +121,7 @@ class BroadcastsController < ApplicationController
         rescue Errno::ESRCH
           flash[:alert] = "Processo de transmissão não encontrado para o broadcast #{broadcast.name}."
         rescue => e
-          flash[:alert] = "Erro ao interromper o broadcast #{broadcast.name}: #{e.message}"
+          flash[:alert] = "Erro ao interrompr o broadcast #{broadcast.name}: #{e.message}"
         end
       else
         flash[:alert] = "Nenhum processo ativo encontrado para o broadcast #{broadcast.name}."
@@ -133,6 +130,7 @@ class BroadcastsController < ApplicationController
 
     redirect_to broadcasts_path, notice: 'Todas as transmissões foram interrompidas!'
   end
+  
   def start
     @broadcast = Broadcast.find(params[:id])
   
@@ -144,7 +142,6 @@ class BroadcastsController < ApplicationController
     redirect_to broadcasts_path
   end
   
-
   def stop
     @broadcast = Broadcast.find(params[:id])
   
@@ -169,7 +166,6 @@ class BroadcastsController < ApplicationController
   
     redirect_to broadcasts_path
   end
-  
   
   def execute
     broadcast_ids = params[:broadcast_ids]
@@ -199,22 +195,40 @@ class BroadcastsController < ApplicationController
       return
     end
 
-    # Gera o conteúdo do arquivo M3U, fazendo a substituição na URL dentro do bloco `map`
-    m3u_content = broadcasts.map do |broadcast|
-      streaming_configuration = StreamingConfiguration.find_by(id: 1)
-    if streaming_configuration
-      server_ip = streaming_configuration.server_ip
-      port = streaming_configuration.port
-    end
-    
-      # Substitui "localhost" por "192.168.1.253" na URL de stream
-      updated_stream_url = broadcast.stream_url.gsub("localhost", "#{server_ip}")
+    # Buscar a configuração de streaming
+    streaming_configuration = StreamingConfiguration.find_by(id: 1)
+    server_ip = streaming_configuration&.server_ip
 
-      "#EXTINF:-1,#{broadcast.name}\n#{updated_stream_url}"
-    end.join("\n")
+    # Gera o conteúdo do arquivo M3U
+    entries = broadcasts.map do |broadcast|
+      # Pula broadcasts sem stream_url
+      next unless broadcast.stream_url.present?
+      
+      # Usa a stream_url atual
+      stream_url = broadcast.stream_url
+      
+      # Se a stream_url contém "localhost", substitui pelo server_ip real
+      if stream_url.include?("localhost") && server_ip.present?
+        stream_url = stream_url.gsub("localhost", server_ip)
+      end
+      
+      "#EXTINF:-1,#{broadcast.name}\n#{stream_url}"
+    end.compact # Remove entradas nil
+
+    # Verifica se temos alguma entrada válida
+    if entries.empty?
+      redirect_to broadcasts_path, alert: "Nenhum broadcast com URL de stream disponível para exportar!"
+      return
+    end
+
+    # Adiciona o cabeçalho M3U no início
+    m3u_content = "#EXTM3U\n" + entries.join("\n")
 
     # Envia o conteúdo como um arquivo M3U
-    send_data m3u_content, type: 'audio/x-mpegurl', disposition: 'attachment', filename: "broadcasts.m3u"
+    send_data m3u_content, 
+              type: 'audio/x-mpegurl', 
+              disposition: 'attachment', 
+              filename: "broadcasts_#{Time.now.strftime('%Y%m%d_%H%M%S')}.m3u"
   end
 
   private
@@ -232,10 +246,9 @@ class BroadcastsController < ApplicationController
     @broadcast = Broadcast.find(params[:id])
   end
 
-def broadcast_params
-  params.require(:broadcast).permit(:name, :video, :show_widgets, :event_date, :orientation)
-end
-
+  def broadcast_params
+    params.require(:broadcast).permit(:name, :video, :show_widgets, :event_date, :orientation)
+  end
 
   def generate_command(video, stream_url)
     base_command = "ffmpeg -stream_loop -1 -re -i #{video_path} -vf \"scale=768:1366,setdar=9/16,transpose=1,setsar=1\" -c:v libx264 -preset fast -c:a aac -b:a 192k -f flv rtmp://localhost/hls/stream#{Broadcast.count}"
@@ -247,10 +260,4 @@ end
     base_command
   end
   
-end
-
-class AddProcessPidToBroadcasts < ActiveRecord::Migration[7.0]
-  def change
-    add_column :broadcasts, :process_pid, :integer
-  end
-end
+end # Este é o end que fecha a classe BroadcastsController

@@ -740,6 +740,48 @@
         padding: 0;
       }
     }
+      /* Estilos para botões de admin no dashboard */
+.btn-dashboard-admin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all var(--transition);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-dashboard-admin:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-admin-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Responsividade para botões do dashboard */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .dashboard-admin-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .btn-dashboard-admin {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
   </style>
 </head>
 <body>

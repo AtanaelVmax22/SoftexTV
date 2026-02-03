@@ -65,6 +65,34 @@
     </div>
     
     <div style="display: flex; gap: 12px;">
+      <!-- Botão Exportar M3U -->
+      <%= link_to export_m3u_broadcasts_path,
+            class: 'btn btn-secondary',
+            style: 'display: flex; align-items: center; gap: 8px;',
+            data: { turbo: false } do %>
+        <i class="fas fa-list-alt"></i>
+        Exportar M3U
+      <% end %>
+      
+      <!-- Botão Configuração -->
+      <% streaming_configuration = StreamingConfiguration.find_by(id: 1) %>
+      <% if streaming_configuration %>
+        <%= link_to edit_streaming_configuration_path(streaming_configuration),
+              class: 'btn btn-info',
+              style: 'display: flex; align-items: center; gap: 8px;' do %>
+          <i class="fas fa-cog"></i>
+          Configuração
+        <% end %>
+      <% else %>
+        <%= link_to new_streaming_configuration_path,
+              class: 'btn btn-info',
+              style: 'display: flex; align-items: center; gap: 8px;' do %>
+          <i class="fas fa-cog"></i>
+          Configuração
+        <% end %>
+      <% end %>
+      
+      <!-- Botão Novo Broadcast -->
       <%= link_to new_broadcast_path, 
             class: 'btn btn-primary',
             style: 'display: flex; align-items: center; gap: 8px;' do %>
@@ -90,8 +118,8 @@
                 <%= broadcast.name %>
               </h3>
               <div class="status-badge <%= broadcast.status == 'running' ? 'online' : 'offline' %>"
-                   style="display: inline-flex;">
-                <span class="status-dot"></span>
+                   style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; background: <%= broadcast.status == 'running' ? 'rgba(76, 201, 240, 0.2)' : 'rgba(247, 37, 133, 0.2)' %>; color: <%= broadcast.status == 'running' ? '#4CC9F0' : '#F72585' %>;">
+                <span class="status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: <%= broadcast.status == 'running' ? '#4CC9F0' : '#F72585' %>;"></span>
                 <%= broadcast.status == 'running' ? 'Online' : 'Offline' %>
               </div>
             </div>
@@ -157,6 +185,20 @@
               <div style="color: white; font-weight: 500;">
                 <%= broadcast.orientation == 'portrait' ? 'Retrato' : 'Paisagem' %>
               </div>
+            </div>
+          </div>
+          
+          <!-- URL do Stream -->
+          <div style="margin-bottom: 16px; font-size: 13px;">
+            <div style="color: var(--gray-400); margin-bottom: 4px;">URL do Stream</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <code style="flex: 1; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 4px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <%= broadcast.stream_url %>
+              </code>
+              <button onclick="copyToClipboard('<%= broadcast.stream_url %>')"
+                      style="background: rgba(67, 97, 238, 0.2); border: none; color: var(--primary); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-copy"></i>
+              </button>
             </div>
           </div>
           
@@ -228,9 +270,9 @@
         if (response.ok) {
           playBtn.classList.replace('fa-pause', 'fa-play');
           const statusBadge = card.querySelector('.status-badge');
-          statusBadge.classList.remove('online');
-          statusBadge.classList.add('offline');
-          statusBadge.innerHTML = '<span class="status-dot"></span> Offline';
+          statusBadge.style.background = 'rgba(247, 37, 133, 0.2)';
+          statusBadge.style.color = '#F72585';
+          statusBadge.innerHTML = '<span class="status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #F72585;"></span> Offline';
           showNotification('Broadcast parado com sucesso', 'success');
         } else {
           showNotification('Erro ao parar o broadcast', 'error');
@@ -252,9 +294,9 @@
         if (response.ok) {
           playBtn.classList.replace('fa-play', 'fa-pause');
           const statusBadge = card.querySelector('.status-badge');
-          statusBadge.classList.remove('offline');
-          statusBadge.classList.add('online');
-          statusBadge.innerHTML = '<span class="status-dot"></span> Online';
+          statusBadge.style.background = 'rgba(76, 201, 240, 0.2)';
+          statusBadge.style.color = '#4CC9F0';
+          statusBadge.innerHTML = '<span class="status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #4CC9F0;"></span> Online';
           showNotification('Broadcast iniciado com sucesso', 'success');
         } else {
           showNotification('Erro ao iniciar o broadcast', 'error');
@@ -305,6 +347,15 @@
       setTimeout(() => notification.remove(), 300);
     }, 5000);
   }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      showNotification('URL copiada para a área de transferência!', 'success');
+    }).catch(err => {
+      console.error('Erro ao copiar: ', err);
+      showNotification('Erro ao copiar a URL', 'error');
+    });
+  }
 </script>
 
 <style>
@@ -332,5 +383,52 @@
   
   .card-action-btn:hover {
     transform: scale(1.1);
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background: rgba(67, 97, 238, 0.9);
+  }
+  
+  .btn-secondary {
+    background: var(--secondary);
+    color: white;
+  }
+  
+  .btn-secondary:hover {
+    background: rgba(100, 116, 139, 0.9);
+  }
+  
+  .btn-info {
+    background: var(--info);
+    color: white;
+  }
+  
+  .btn-info:hover {
+    background: rgba(76, 201, 240, 0.9);
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
 </style>

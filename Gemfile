@@ -6,7 +6,7 @@ ruby "3.2.1"
 gem 'fullcalendar-rails'
 # Gemfile
 gem 'rufus-scheduler'
-
+gem 'streamio-ffmpeg'
 gem 'devise'
 gem 'pundit'
 gem "rubyzip", "~> 2.3.x"
