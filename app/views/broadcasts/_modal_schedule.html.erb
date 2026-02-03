@@ -1,0 +1,290 @@
+<div class="modal-overlay" id="schedule-modal-overlay" 
+     onclick="if(event.target===this) closeScheduleModal()"
+     style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; padding: 20px;">
+  
+  <div class="modal-container" 
+       style="background: rgba(30, 41, 59, 0.95); border-radius: var(--border-radius);
+              border: 1px solid rgba(255, 255, 255, 0.1); max-width: 1200px;
+              width: 100%; max-height: 90vh; display: flex; flex-direction: column;">
+    
+    <!-- Header do Modal -->
+    <div class="modal-header" 
+         style="padding: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="font-size: 20px; font-weight: 600; color: white;">
+        <i class="fas fa-calendar-alt" style="margin-right: 12px; color: var(--primary);"></i>
+        Agendamento de Vídeos
+      </h2>
+      <button onclick="closeScheduleModal()" 
+              style="background: none; border: none; color: #94a3b8; 
+                     font-size: 24px; cursor: pointer; padding: 0; width: 32px; height: 32px;">
+        &times;
+      </button>
+    </div>
+    
+    <!-- Corpo do Modal -->
+    <div class="modal-body" style="flex: 1; overflow: hidden; display: flex;">
+      
+      <!-- Painel Esquerdo: Controle de Períodos -->
+      <div class="periods-panel" 
+           style="flex: 1; padding: 24px; border-right: 1px solid rgba(255, 255, 255, 0.1);
+                  overflow-y: auto; max-width: 400px;">
+        
+        <div class="periods-controls" style="margin-bottom: 24px;">
+          <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+            <div style="flex: 1;">
+              <label style="display: block; margin-bottom: 8px; color: #cbd5e1; font-size: 14px;">
+                Selecione o período:
+              </label>
+              <input type="text" 
+                     id="date-range-input" 
+                     class="form-input"
+                     placeholder="DD/MM/AAAA - DD/MM/AAAA"
+                     style="background: rgba(15, 23, 42, 0.8);">
+            </div>
+            <button id="add-period-btn" 
+                    class="btn btn-primary"
+                    style="align-self: flex-end; padding: 12px 16px;">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+          
+          <div class="upload-hint" 
+               style="background: rgba(67, 97, 238, 0.1); padding: 12px; 
+                      border-radius: var(--border-radius-sm); font-size: 13px;">
+            <i class="fas fa-info-circle" style="color: var(--primary); margin-right: 8px;"></i>
+            Adicione períodos e associe um vídeo específico para cada um
+          </div>
+        </div>
+        
+        <!-- Lista de Períodos -->
+        <div id="period-list-container" 
+             style="min-height: 200px; max-height: 400px; overflow-y: auto;">
+          <!-- Períodos serão adicionados dinamicamente aqui -->
+        </div>
+        
+        <!-- Botão de Salvar -->
+        <div class="modal-actions" style="margin-top: 24px; padding-top: 24px; 
+             border-top: 1px solid rgba(255, 255, 255, 0.1);">
+          <button id="save-all-schedules" 
+                  class="btn btn-primary"
+                  style="width: 100%; padding: 14px; font-size: 16px;">
+            <i class="fas fa-save"></i>
+            Salvar Todos os Agendamentos
+          </button>
+        </div>
+      </div>
+      
+      <!-- Painel Direito: Calendário -->
+      <div class="calendar-panel" style="flex: 2; padding: 24px; overflow-y: auto;">
+        <h3 style="margin-bottom: 20px; color: white; font-size: 16px;">
+          Visão do Calendário
+        </h3>
+        <div id="schedule-calendar" style="background: rgba(15, 23, 42, 0.8); 
+             border-radius: var(--border-radius-sm); padding: 20px; min-height: 500px;">
+          <!-- FullCalendar será inicializado aqui -->
+          <div id="calendar"></div>
+        </div>
+        
+        <!-- Legenda -->
+        <div class="calendar-legend" 
+             style="margin-top: 20px; display: flex; gap: 16px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 12px; height: 12px; background: var(--primary); 
+                 border-radius: 2px;"></div>
+            <span style="font-size: 12px; color: #94a3b8;">Período Agendado</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 12px; height: 12px; background: var(--success); 
+                 border-radius: 2px;"></div>
+            <span style="font-size: 12px; color: #94a3b8;">Período Ativo</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 12px; height: 12px; background: var(--warning); 
+                 border-radius: 2px;"></div>
+            <span style="font-size: 12px; color: #94a3b8;">Conflito de Horário</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FullCalendar CSS & JS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.2.0/fullcalendar.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.2.0/fullcalendar.min.js"></script>
+
+<script>
+  function initializeScheduleModal() {
+    // Inicializar Litepicker
+    const picker = new Litepicker({
+      element: document.getElementById('date-range-input'),
+      singleMode: false,
+      numberOfMonths: 2,
+      numberOfColumns: 2,
+      format: 'DD/MM/YYYY',
+      allowRepick: true,
+      minDate: new Date()
+    });
+    
+    // Inicializar FullCalendar
+    $('#calendar').fullCalendar({
+      events: '<%= events_broadcast_path(@broadcast) %>',
+      header: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'month,agendaWeek,agendaDay'
+      },
+      editable: true,
+      droppable: true,
+      eventClick: function(event) {
+        alert('Evento: ' + event.title);
+      },
+      eventDrop: function(event) {
+        updateEvent(event);
+      }
+    });
+    
+    // Adicionar período
+    let periodCount = 0;
+    document.getElementById('add-period-btn').addEventListener('click', function() {
+      const dateRange = document.getElementById('date-range-input').value;
+      if (!dateRange) {
+        alert('Selecione um período primeiro');
+        return;
+      }
+      
+      periodCount++;
+      const periodId = `period-${periodCount}`;
+      const [start, end] = dateRange.split(' - ');
+      
+      const periodHTML = `
+        <div class="period-item" id="${periodId}" 
+             style="background: rgba(15, 23, 42, 0.8); border-radius: var(--border-radius-sm);
+                    padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--primary);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <strong style="color: white; font-size: 14px;">Período ${periodCount}</strong>
+              <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">
+                ${start} → ${end}
+              </p>
+            </div>
+            <button onclick="removePeriodItem('${periodId}')"
+                    style="background: none; border: none; color: #f87171; 
+                           cursor: pointer; font-size: 18px;">
+              &times;
+            </button>
+          </div>
+          
+          <div class="period-upload" style="margin-top: 12px;">
+            <div class="upload-area-small" 
+                 onclick="document.getElementById('video-${periodId}').click()"
+                 style="border: 1px dashed rgba(255, 255, 255, 0.2); padding: 12px; 
+                        border-radius: var(--border-radius-sm); cursor: pointer; 
+                        text-align: center;">
+              <i class="fas fa-video" style="color: #94a3b8; margin-right: 8px;"></i>
+              <span class="upload-text-small" style="color: #94a3b8; font-size: 13px;">
+                Selecionar vídeo para este período
+              </span>
+              <input type="file" 
+                     id="video-${periodId}" 
+                     class="d-none"
+                     accept="video/*"
+                     data-period-id="${periodId}"
+                     onchange="updatePeriodVideo(this)">
+            </div>
+            <input type="hidden" name="periods[]" value="${start} - ${end}">
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('period-list-container').insertAdjacentHTML('beforeend', periodHTML);
+      document.getElementById('date-range-input').value = '';
+    });
+    
+    // Salvar todos os agendamentos
+    document.getElementById('save-all-schedules').addEventListener('click', saveAllSchedules);
+  }
+  
+  function removePeriodItem(id) {
+    document.getElementById(id).remove();
+  }
+  
+  function updatePeriodVideo(input) {
+    const periodId = input.getAttribute('data-period-id');
+    const fileName = input.files[0]?.name || 'Nenhum vídeo selecionado';
+    const uploadText = input.parentElement.querySelector('.upload-text-small');
+    uploadText.textContent = fileName;
+    uploadText.style.color = 'var(--success)';
+  }
+  
+  function saveAllSchedules() {
+    const formData = new FormData();
+    const broadcastId = '<%= @broadcast.id %>';
+    
+    document.querySelectorAll('.period-item').forEach((item, index) => {
+      const periodInput = item.querySelector('input[name="periods[]"]');
+      const videoInput = item.querySelector('input[type="file"]');
+      
+      if (!periodInput || !videoInput || !videoInput.files[0]) return;
+      
+      const period = periodInput.value;
+      const video = videoInput.files[0];
+      
+      if (!period || !video) return;
+      
+      const [start, end] = period.split(' - ');
+      const startDate = moment(start, 'DD/MM/YYYY').format('YYYY-MM-DD');
+      const endDate = moment(end, 'DD/MM/YYYY').format('YYYY-MM-DD');
+      
+      formData.append(`schedules[${index}][start_date]`, startDate);
+      formData.append(`schedules[${index}][end_date]`, endDate);
+      formData.append(`schedules[${index}][video]`, video);
+      formData.append(`schedules[${index}][broadcast_id]`, broadcastId);
+    });
+    
+    const saveBtn = document.getElementById('save-all-schedules');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    saveBtn.disabled = true;
+    
+    fetch('<%= bulk_create_schedules_path %>', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('Agendamentos salvos com sucesso!', 'success');
+        setTimeout(() => {
+          closeScheduleModal();
+          location.reload();
+        }, 1500);
+      } else {
+        showNotification('Erro ao salvar: ' + (data.error || 'Desconhecido'), 'error');
+      }
+    })
+    .catch(error => {
+      showNotification('Erro de conexão: ' + error.message, 'error');
+    })
+    .finally(() => {
+      saveBtn.innerHTML = originalText;
+      saveBtn.disabled = false;
+    });
+  }
+  
+  function closeScheduleModal() {
+    document.getElementById('schedule-modal').style.display = 'none';
+  }
+  
+  function showNotification(message, type = 'info') {
+    // Implementar sistema de notificações
+    alert(message); // Temporário
+  }
+</script>

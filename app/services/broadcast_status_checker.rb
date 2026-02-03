@@ -1,18 +1,19 @@
 class BroadcastStatusChecker
     def self.verify_all
-      Broadcast.where(status: 'running').find_each do |broadcast|
-        if broadcast.process_pid.nil? || !process_alive?(broadcast.process_pid)
-          Rails.logger.info "Broadcast #{broadcast.id} estava como 'running', mas o processo não existe. Reiniciando..."
-  
-          # Reinicia o processo
-          pid = spawn_hidden(broadcast.command)
-          Process.detach(pid)
-  
-          broadcast.update(process_pid: pid, status: 'running')
-  
-          Rails.logger.info "Broadcast #{broadcast.id} reiniciado com novo PID #{pid}"
-        end
+    return unless ActiveRecord::Base.connection.data_source_exists?('broadcasts')
+
+    Broadcast.where(status: 'running').find_each do |broadcast|
+      if broadcast.process_pid.nil? || !process_alive?(broadcast.process_pid)
+        Rails.logger.info "Broadcast #{broadcast.id} estava como 'running', mas o processo não existe. Reiniciando..."
+
+        pid = spawn_hidden(broadcast.command)
+        Process.detach(pid)
+
+        broadcast.update(process_pid: pid, status: 'running')
+
+        Rails.logger.info "Broadcast #{broadcast.id} reiniciado com novo PID #{pid}"
       end
+    end
     end
   
     def self.process_alive?(pid)

@@ -1,676 +1,415 @@
-
-
-<h1><%= I18n.t('Edit Broadcast') %></h1>
-
-<div class="broadcasts-container-edit">
-  <div class="broadcast-card-desktop-edit mirror-effect" data-broadcast-id="desktop">
-    <%= form_with(model: @broadcast, local: true, class: 'edit-broadcast-form', html: { id: 'broadcast-form' }) do |form| %>
-      <% if @broadcast.errors.any? %>
-        <div id="error_explanation">
-          <h2><%= pluralize(@broadcast.errors.count, "error") %> prohibited this broadcast from being saved:</h2>
-          <ul>
-            <% @broadcast.errors.full_messages.each do |message| %>
-              <li><%= message %></li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-
-      <div class="shadow-effect"></div>
-      <div class="upload-desktop">
-        <div class="field">
-          <%= form.label :name %>
-          <%= form.text_field :name, value: @broadcast.name, class: 'input-field' %>
+<div class="edit-broadcast-view">
+  <div class="grid grid-cols-2" style="gap: 32px; min-height: calc(100vh - 160px);">
+    
+    <!-- COLUNA ESQUERDA: CONFIGURAÇÃO -->
+    <div class="space-y-6">
+      <!-- Card de Configuração Principal -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📝 Configuração do Broadcast</h2>
+          <div class="status-badge <%= @broadcast.status == 'running' ? 'online' : 'offline' %>">
+            <span class="status-dot"></span>
+            <%= @broadcast.status == 'running' ? 'Online' : 'Offline' %>
+          </div>
         </div>
         
-        <div class="field">
-          <%= form.label :video %>
-          <%= form.file_field :video, class: 'input-field' %>
-        </div>
-
-        <!-- BOTÃO "AGENDAR VÍDEOS" DENTRO DO FORM, MAS NÃO ENVIA O FORMULÁRIO -->
-        <div class="field">
-          <button type="button" id="open-timeline" class="timeline-btn">Schedule Videos</button>
-        </div>
-
-        <div class="field">
-          <%= form.label :show_widgets, 'Show Widgets' %>
-          <%= form.check_box :show_widgets %>
-        </div>
-
-        <div class="field">
-          <%= form.label :orientation, 'Orientação da Tela' %>
-          <%= form.select :orientation, options_for_select([['Retrato', 'portrait'], ['Paisagem', 'landscape']], @broadcast.orientation), {}, class: 'input-field' %>
-        </div>
-
-        <!-- BOTÃO DE SUBMISSÃO DO FORMULÁRIO -->
-        <div class="actions">
-          <%= form.submit I18n.t('Update Broadcast'), class: 'submit-btn' %>
+        <div class="card-body">
+          <%= form_with(model: @broadcast, local: true, class: 'broadcast-form', 
+              html: { id: 'broadcast-form', autocomplete: 'off' }) do |form| %>
+            
+            <% if @broadcast.errors.any? %>
+              <div class="error-message" style="background: rgba(247, 37, 133, 0.1); 
+                    border-left: 4px solid var(--danger); padding: 16px; 
+                    border-radius: var(--border-radius-sm); margin-bottom: 24px;">
+                <h3 style="color: var(--danger); margin-bottom: 8px;">
+                  <%= pluralize(@broadcast.errors.count, "erro") %> encontrado(s):
+                </h3>
+                <ul style="color: #fecdd3; font-size: 14px;">
+                  <% @broadcast.errors.full_messages.each do |message| %>
+                    <li>• <%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+            
+            <!-- Nome do Broadcast -->
+            <div class="form-group">
+              <label class="form-label">Nome do Broadcast</label>
+              <%= form.text_field :name, 
+                  class: 'form-input',
+                  placeholder: 'Ex: TV Sala de Reuniões',
+                  value: @broadcast.name %>
+            </div>
+            
+            <!-- Upload do Vídeo Principal -->
+            <div class="form-group">
+              <label class="form-label">Vídeo Principal</label>
+              <div class="upload-area" onclick="document.getElementById('video-upload').click()">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <p class="upload-text">Arraste e solte o arquivo de vídeo</p>
+                <p class="upload-note">ou clique para selecionar</p>
+                <% if @broadcast.video.attached? %>
+                  <div style="margin-top: 16px; padding: 12px; background: rgba(76, 201, 240, 0.1); 
+                       border-radius: var(--border-radius-sm);">
+                    <i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i>
+                    <span style="color: #bae6fd;">
+                      <%= @broadcast.video.filename %> 
+                      (<%= number_to_human_size(@broadcast.video.byte_size) %>)
+                    </span>
+                  </div>
+                <% end %>
+                <%= form.file_field :video, 
+                    id: 'video-upload', 
+                    class: 'd-none',
+                    accept: 'video/*',
+                    onchange: 'updateFileName(this)' %>
+              </div>
+            </div>
+            
+            <!-- Opções de Exibição -->
+            <div class="form-group">
+              <div class="toggle-switch">
+                <%= form.check_box :show_widgets, class: 'toggle-input' %>
+                <span class="toggle-slider"></span>
+                <span class="toggle-label" style="color: #cbd5e1;">Mostrar Widgets na Transmissão</span>
+              </div>
+            </div>
+            
+            <!-- Orientação da Tela -->
+            <div class="form-group">
+              <label class="form-label">Orientação da Tela</label>
+              <div class="orientation-toggle" style="display: flex; gap: 12px;">
+                <label class="orientation-option" 
+                       style="flex: 1; text-align: center; cursor: pointer;">
+                  <input type="radio" name="broadcast[orientation]" 
+                         value="portrait" 
+                         <%= 'checked' if @broadcast.orientation == 'portrait' %>
+                         class="d-none"
+                         onchange="toggleOrientation(this)">
+                  <div class="orientation-preview <%= 'active' if @broadcast.orientation == 'portrait' %>"
+                       style="padding: 20px; border: 2px solid transparent; 
+                              border-radius: var(--border-radius-sm); 
+                              background: rgba(15, 23, 42, 0.5);">
+                    <div style="width: 40px; height: 70px; margin: 0 auto; 
+                         background: <%= @broadcast.orientation == 'portrait' ? 'var(--primary)' : '#475569' %>; 
+                         border-radius: 4px;"></div>
+                    <p style="margin-top: 12px; color: <%= @broadcast.orientation == 'portrait' ? 'white' : '#94a3b8' %>;">
+                      Retrato
+                    </p>
+                  </div>
+                </label>
+                
+                <label class="orientation-option" 
+                       style="flex: 1; text-align: center; cursor: pointer;">
+                  <input type="radio" name="broadcast[orientation]" 
+                         value="landscape" 
+                         <%= 'checked' if @broadcast.orientation == 'landscape' %>
+                         class="d-none"
+                         onchange="toggleOrientation(this)">
+                  <div class="orientation-preview <%= 'active' if @broadcast.orientation == 'landscape' %>"
+                       style="padding: 20px; border: 2px solid transparent; 
+                              border-radius: var(--border-radius-sm); 
+                              background: rgba(15, 23, 42, 0.5);">
+                    <div style="width: 70px; height: 40px; margin: 0 auto; 
+                         background: <%= @broadcast.orientation == 'landscape' ? 'var(--primary)' : '#475569' %>; 
+                         border-radius: 4px;"></div>
+                    <p style="margin-top: 12px; color: <%= @broadcast.orientation == 'landscape' ? 'white' : '#94a3b8' %>;">
+                      Paisagem
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+            
+            <!-- Botões de Ação -->
+            <div style="display: flex; gap: 12px; margin-top: 32px;">
+              <%= form.submit '💾 Salvar Alterações', 
+                  class: 'btn btn-primary',
+                  style: 'flex: 1;',
+                  data: { disable_with: 'Salvando...' } %>
+              
+              <button type="button" 
+                      onclick="openScheduleModal()"
+                      class="btn btn-secondary"
+                      style="flex: 1;">
+                <i class="fas fa-calendar-alt"></i>
+                Agendar Vídeos
+              </button>
+            </div>
+          <% end %>
         </div>
       </div>
-    <% end %>
-
-    <%= form_with model: @broadcast, method: :delete, data: { confirm: 'Are you sure you want to delete this broadcast?' } do |form| %>
-      <%= form.submit 'X', class: 'delete-btn' %>
-    <% end %>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div id="timeline-modal" class="modal-overlay">
-  <div class="modal-content">
-    <span class="close-modal" id="close-timeline">&times;</span>
-    <h2>Agendamento de Vídeos</h2>
-
-    <div class="field">
-      <label>Selecione o período:</label>
-      <input type="text" id="date-range" class="input-field" placeholder="Escolha a data">
-      <button id="add-period" class="add-period-btn">Adicionar Período</button>
+      
+      <!-- Zona de Perigo -->
+      <div class="card" style="border-color: var(--danger); background: rgba(247, 37, 133, 0.05);">
+        <div class="card-header">
+          <h2 class="card-title" style="color: var(--danger);">
+            ⚠️ Zona de Perigo
+          </h2>
+        </div>
+        <div class="card-body">
+          <p style="color: #fecdd3; margin-bottom: 20px; font-size: 14px;">
+            Esta ação é irreversível. Ao excluir este broadcast, todos os agendamentos 
+            e configurações serão permanentemente removidos.
+          </p>
+          <%= button_to '🗑️ Excluir Broadcast', 
+                broadcast_path(@broadcast), 
+                method: :delete, 
+                class: 'btn btn-danger',
+                style: 'width: 100%;',
+                data: { 
+                  confirm: 'Tem certeza que deseja excluir este broadcast?',
+                  turbo_confirm: 'Tem certeza que deseja excluir este broadcast?'
+                } %>
+        </div>
+      </div>
     </div>
-
-    <div id="period-list"></div>
+    
+    <!-- COLUNA DIREITA: PREVIEW -->
+    <div class="space-y-6">
+      <!-- Preview do Vídeo -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📺 Preview ao Vivo</h2>
+          <div style="display: flex; gap: 8px;">
+            <%= form_with(url: start_broadcast_path(@broadcast), method: :post, local: true) do %>
+              <%= button_tag type: 'submit', 
+                    class: 'btn',
+                    style: 'padding: 6px 12px; font-size: 12px; background: rgba(76, 201, 240, 0.2);' do %>
+                <i class="fas fa-play"></i> Iniciar
+              <% end %>
+            <% end %>
+            
+            <%= form_with(url: stop_broadcast_path(@broadcast), method: :post, local: true) do %>
+              <%= button_tag type: 'submit', 
+                    class: 'btn',
+                    style: 'padding: 6px 12px; font-size: 12px; background: rgba(247, 37, 133, 0.2);' do %>
+                <i class="fas fa-stop"></i> Parar
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <div class="video-preview-container" 
+               style="background: #0f172a; border-radius: var(--border-radius-sm); 
+                      overflow: hidden; aspect-ratio: 16/9;">
+            <% if @broadcast.video.attached? %>
+              <video id="preview-player"
+                     class="video-js vjs-default-skin"
+                     controls
+                     preload="metadata"
+                     style="width: 100%; height: 100%;">
+                <source src="<%= url_for(@broadcast.video) %>" type="<%= @broadcast.video.content_type %>">
+              </video>
+            <% else %>
+              <div style="display: flex; align-items: center; justify-content: center; 
+                   height: 100%; color: #64748b; text-align: center;">
+                <div>
+                  <i class="fas fa-video-slash" style="font-size: 48px; margin-bottom: 16px;"></i>
+                  <p>Nenhum vídeo carregado</p>
+                  <p style="font-size: 12px; color: #475569;">
+                    Faça upload de um vídeo para visualizar
+                  </p>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- Informações Técnicas -->
+          <div style="margin-top: 20px; padding: 16px; background: rgba(15, 23, 42, 0.5); 
+               border-radius: var(--border-radius-sm); font-size: 13px;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+              <div>
+                <span style="color: #94a3b8;">ID:</span>
+                <span style="color: white; font-family: monospace;"><%= @broadcast.id %></span>
+              </div>
+              <div>
+                <span style="color: #94a3b8;">Criado em:</span>
+                <span><%= @broadcast.created_at.strftime('%d/%m/%Y %H:%M') %></span>
+              </div>
+              <div>
+                <span style="color: #94a3b8;">Stream URL:</span>
+                <span style="color: #bae6fd; font-family: monospace; font-size: 12px;">
+                  <%= truncate(@broadcast.stream_url, length: 25) %>
+                </span>
+              </div>
+              <div>
+                <span style="color: #94a3b8;">Última atualização:</span>
+                <span><%= time_ago_in_words(@broadcast.updated_at) %> atrás</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Agendamentos Ativos -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">📅 Agendamentos Ativos</h2>
+          <span class="badge" style="background: rgba(76, 201, 240, 0.2); color: var(--success); 
+                padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+            <%= @schedules.count %> ativo(s)
+          </span>
+        </div>
+        
+        <div class="card-body">
+          <% if @schedules.any? %>
+            <div class="schedules-list" style="max-height: 300px; overflow-y: auto;">
+              <% @schedules.each do |schedule| %>
+                <div class="schedule-item" 
+                     style="padding: 12px; background: rgba(15, 23, 42, 0.5); 
+                            border-radius: var(--border-radius-sm); margin-bottom: 8px;
+                            border-left: 4px solid var(--success);">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <strong style="color: white; font-size: 14px;">
+                        <%= schedule.start.strftime('%d/%m/%Y') %> → <%= schedule.end.strftime('%d/%m/%Y') %>
+                      </strong>
+                      <p style="color: #94a3b8; font-size: 12px; margin-top: 4px;">
+                        <%= schedule.video.filename if schedule.video.attached? %>
+                      </p>
+                    </div>
+                    <button onclick="removeSchedule(<%= schedule.id %>)" 
+                            class="btn"
+                            style="padding: 4px 8px; font-size: 12px; background: rgba(247, 37, 133, 0.2);">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+              <i class="fas fa-calendar-plus" style="font-size: 48px; margin-bottom: 16px;"></i>
+              <p>Nenhum agendamento configurado</p>
+              <p style="font-size: 13px; margin-top: 8px;">
+                Clique em "Agendar Vídeos" para configurar períodos de exibição
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
   </div>
+  
+  <!-- Modal de Agendamento (será renderizado via JavaScript) -->
+  <div id="schedule-modal" style="display: none;"></div>
 </div>
-
-
-
-
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
-<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.2.0/fullcalendar.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.2.0/fullcalendar.min.css" rel="stylesheet" />
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const modal = document.getElementById("timeline-modal");
-  const openModalBtn = document.getElementById("open-timeline");
-  const closeModalBtn = document.getElementById("close-timeline");
-
-  // Abre o modal ao clicar no botão "Agendar Vídeos"
-  openModalBtn.addEventListener("click", function () {
-    modal.style.display = "flex";
-  });
-
-  // Fecha o modal ao clicar no botão de fechar
-  closeModalBtn.addEventListener("click", function () {
-    modal.style.display = "none";
-  });
-
-  // Fecha o modal ao clicar fora dele
-  window.addEventListener("click", function (event) {
-    if (event.target === modal) {
-      modal.style.display = "none";
-    }
-  });
-});
-
-
-document.addEventListener("DOMContentLoaded", function() {
-  const broadcastForm = document.getElementById("broadcast-form");
-
-  if (broadcastForm) {
-    broadcastForm.addEventListener("submit", async function(event) {
-      event.preventDefault(); // Impede envio imediato
-
-      const formData = new FormData();
-      const broadcastId = "<%= @broadcast.id %>";
-      let hasData = false;
-
-      document.querySelectorAll(".period-item").forEach((item, index) => {
-        const periodInput = item.querySelector("input[type='hidden']");
-        const videoInput = item.querySelector("input[type='file']");
-
-        // ⚠️ Verifica se os elementos existem antes de acessar seus valores
-        if (!periodInput || !videoInput) return;
-
-        const period = periodInput.value;
-        const video = videoInput.files[0];
-
-        // ⚠️ Garante que apenas períodos com vídeos sejam enviados
-        if (!period || !video) return;
-
-        const [start, end] = period.split(" - ");
-        const startDate = moment(start, "DD/MM/YYYY").format("YYYY-MM-DD");
-        const endDate = moment(end, "DD/MM/YYYY").format("YYYY-MM-DD");
-
-        formData.append(`schedules[${index}][start_date]`, startDate);
-        formData.append(`schedules[${index}][end_date]`, endDate);
-        formData.append(`schedules[${index}][video]`, video);
-        formData.append(`schedules[${index}][broadcast_id]`, broadcastId);
-
-        hasData = true;
+  // Funções JavaScript para interatividade
+  function openScheduleModal() {
+    // Carregar o modal via AJAX
+    fetch('<%= schedule_modal_broadcast_path(@broadcast) %>')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('schedule-modal').innerHTML = html;
+        document.getElementById('schedule-modal').style.display = 'flex';
+        initializeScheduleModal();
       });
-
-      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-      try {
-        if (hasData) {
-          const response = await fetch("/schedules/bulk_create", {
-            method: "POST",
-            body: formData,
-            headers: {
-              "X-CSRF-Token": csrfToken
-            }
-          });
-          
-          if (!response.ok) {
-            const text = await response.text();
-            throw new Error("Erro inesperado: " + text);
-          }
-          
+  }
+  
+  function toggleOrientation(radio) {
+    document.querySelectorAll('.orientation-preview').forEach(el => {
+      el.classList.remove('active');
+      el.style.borderColor = 'transparent';
+    });
+    
+    radio.parentElement.querySelector('.orientation-preview').classList.add('active');
+    radio.parentElement.querySelector('.orientation-preview').style.borderColor = 'var(--primary)';
+  }
+  
+  function updateFileName(input) {
+    if (input.files.length > 0) {
+      const fileName = input.files[0].name;
+      const uploadArea = input.closest('.upload-area');
+      uploadArea.innerHTML = `
+        <i class="fas fa-check-circle upload-icon" style="color: var(--success);"></i>
+        <p class="upload-text">${fileName}</p>
+        <p class="upload-note">Clique para alterar</p>
+        <input type="file" id="video-upload" class="d-none" 
+               accept="video/*" onchange="updateFileName(this)">
+      `;
+    }
+  }
+  
+  function removeSchedule(scheduleId) {
+    if (confirm('Remover este agendamento?')) {
+      fetch('/schedules/destroy_schedule', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ id: scheduleId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
         }
-
-        // Agora submete o formulário de fato
-        broadcastForm.submit();
-
-      } catch (error) {
-        alert("Erro ao salvar: " + error.message);
-        console.error(error);
-      }
-    });
-  }
-});
-
-
-document.addEventListener("DOMContentLoaded", function() {
-  let removedScheduleIds = [];
-
-  const picker = new Litepicker({
-    element: document.getElementById('date-range'),
-    singleMode: false,
-    numberOfMonths: 1,
-    numberOfColumns: 1,
-    format: 'DD/MM/YYYY',
-    allowRepick: true,
-    minDate: new Date()
-  });
-
-  let periods = [];
-
-  document.getElementById("add-period").addEventListener("click", function () {
-    const dateInput = document.getElementById("date-range").value;
-    if (dateInput === "") {
-      alert("Selecione um período antes de adicionar.");
-      return;
+      });
     }
-  
-    const periodId = `period-${periods.length}`;
-    const [start, end] = dateInput.split(" - ");
-    const startDate = moment(start, "DD/MM/YYYY").format("DD/MM/YYYY");
-    const endDate = moment(end, "DD/MM/YYYY").format("DD/MM/YYYY");
-  
-    const periodHTML = `
-      <div class="period-item" id="${periodId}">
-        <strong>Período:</strong> ${startDate} - ${endDate}
-        <input type="hidden" name="periods[]" value="${startDate} - ${endDate}">
-        <input type="file" name="videos[]" class="video-upload" accept="video/*">
-        <button class="remove-period" onclick="removePeriod('${periodId}')">Remover</button>
-      </div>
-    `;
-  
-    document.getElementById("period-list").insertAdjacentHTML("beforeend", periodHTML);
-    periods.push(dateInput);
-    document.getElementById("date-range").value = "";
-  });
-  
-
-  window.removePeriod = function(periodId, scheduleId = null) {
-  const element = document.getElementById(periodId);
-  element.remove();
-
-  if (scheduleId) {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-    fetch("/schedules/destroy_schedule", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": csrfToken
-      },
-      body: JSON.stringify({ id: scheduleId })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        alert("Erro ao excluir: " + data.error);
-      } else {
-        console.log("Agendamento removido com sucesso");
-      }
-    })
-    .catch(err => {
-      console.error("Erro ao excluir:", err);
-    });
   }
-};
-
-
-
-  document.getElementById("save-all").addEventListener("click", function() {
+  
+  // Estilização dinâmica
+  document.addEventListener('DOMContentLoaded', function() {
+    // Marcar orientação ativa
+    document.querySelectorAll('input[name="broadcast[orientation]"]:checked').forEach(radio => {
+      radio.parentElement.querySelector('.orientation-preview').style.borderColor = 'var(--primary)';
+    });
     
-  const formData = new FormData();
-  const broadcastId = "<%= @broadcast.id %>";
-  if (removedScheduleIds.length > 0) {
-    removedScheduleIds.forEach(id => {
-      formData.append("removed_ids[]", id);
-    });
-  }
-  let hasData = false;
-
-  
-  document.querySelectorAll(".period-item").forEach((item, index) => {
-    const period = item.querySelector("input[type='hidden']").value;
-    const video = item.querySelector("input[type='file']").files[0];
-
-    if (!period || !video) {
-      alert("Cada período deve ter um vídeo associado!");
-      return;
+    // Inicializar player de preview
+    if (document.getElementById('preview-player')) {
+      const player = videojs('preview-player', {
+        fluid: true,
+        controls: true,
+        autoplay: false,
+        preload: 'metadata'
+      });
     }
-
-    const [start, end] = period.split(" - ");
-    const startDate = moment.utc(schedule.start).format("DD/MM/YYYY");
-    const endDate = moment.utc(schedule.end).format("DD/MM/YYYY");
-    
-
-    formData.append(`schedules[${index}][start_date]`, startDate);
-    formData.append(`schedules[${index}][end_date]`, endDate);
-    formData.append(`schedules[${index}][video]`, video);
-    formData.append(`schedules[${index}][broadcast_id]`, broadcastId);
-
-    hasData = true;
-  });
-
-  if (!hasData) {
-    alert("Nenhum período foi adicionado!");
-    return;
-  }
-
-  // Pegando o token CSRF do HTML
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-  fetch("/schedules/bulk_create", {
-    method: "POST",
-    body: formData,
-    headers: {
-      "X-CSRF-Token": csrfToken // Adicionando o token CSRF no cabeçalho
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.error) {
-      alert("Erro ao salvar: " + data.error);
-    } else {
-      alert("Períodos e vídeos salvos com sucesso!");
-      location.reload();
-    }
-  })
-  .catch(error => {
-    console.error("Erro ao salvar:", error);
-    alert("Erro ao enviar os dados. Veja o console para mais detalhes.");
-  });
-});
-
-
-});
-
-window.updateVideoName = function(input) {
-  const span = input.parentElement.querySelector(".video-name");
-  const fileName = input.files[0]?.name || "Nenhum vídeo selecionado";
-  span.textContent = `🎥 ${fileName}`;
-}
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-  const modal = document.getElementById("timeline-modal");
-  const openModalBtn = document.getElementById("open-timeline");
-  const closeModalBtn = document.getElementById("close-timeline");
-
-  // Abre o modal ao clicar no botão "Agendar Vídeos"
-  openModalBtn.addEventListener("click", function () {
-    modal.style.display = "flex";
-  });
-
-  // Fecha o modal ao clicar no botão de fechar
-  closeModalBtn.addEventListener("click", function () {
-    modal.style.display = "none";
-  });
-
-  // Fecha o modal ao clicar fora dele
-  window.addEventListener("click", function (event) {
-    if (event.target === modal) {
-      modal.style.display = "none";
-    }
-  });
-
-  const periodList = document.getElementById("period-list");
-  const existingSchedules = <%= @schedules.to_json.html_safe %>;
-
-  existingSchedules.forEach(schedule => {
-    const startDate = moment.utc(schedule.start).format("DD/MM/YYYY");
-    const endDate = moment.utc(schedule.end).format("DD/MM/YYYY");
-    
-    const videoName = schedule.video ? schedule.video.split('/').pop() : 'Nenhum vídeo';
-    const periodId = `period-${schedule.id}`;
-
-    const periodHTML = `
-      <div class="period-item" id="${periodId}">
-        <strong>Período:</strong> ${startDate} - ${endDate} | 🎥 <strong>Vídeo:</strong> ${videoName}
-        <div>
-          <input type="file" name="videos[]" class="video-upload" accept="video/*">
-          <button class="remove-period" onclick="removePeriod('${periodId}', ${schedule.id})">Remover</button>
-        </div>
-      </div>
-    `;
-
-    periodList.insertAdjacentHTML("beforeend", periodHTML);
-  });
-});
-
-
-
-// Atualiza o nome do vídeo quando um novo arquivo é selecionado
-window.updateVideoName = function(input, periodId) {
-  const fileName = input.files[0] ? input.files[0].name : "Nenhum vídeo selecionado";
-  const periodElement = document.getElementById(periodId);
-  const videoNameElement = periodElement.querySelector(".video-name");
-
-  if (videoNameElement) {
-    videoNameElement.textContent = `🎥 ${fileName}`;
-  }
-};
-
-
-
-
-
-
-
-
-  $(document).ready(function() {
-    // Inicializa o calendário
-    $('#calendar').fullCalendar({
-      events: '/broadcasts/events', // URL para buscar os eventos
-      editable: true, // Permite edição
-      droppable: true, // Permite arrastar e soltar
-      eventDrop: function(event, delta, revertFunc) {
-        // Atualiza o evento quando arrastado
-        $.ajax({
-          url: '/broadcasts/update_event', // Atualiza evento no backend
-          method: 'PATCH',
-          data: {
-            event_id: event.id,
-            start: event.start.format(),
-            end: event.end.format()
-          },
-          success: function(response) {
-            alert('Event updated successfully!');
-          }
-        });
-      },
-      eventClick: function(event) {
-        // Exibe mais detalhes ao clicar no evento
-        alert('Event clicked: ' + event.title);
-      }
-    });
-
-    // Exibe ou esconde o calendário quando o checkbox "Agendar" for marcado
-    $('#schedule_checkbox').change(function() {
-      if ($(this).is(':checked')) {
-        $('#calendar_field').show();  // Exibe o calendário
-      } else {
-        $('#calendar_field').hide();  // Esconde o calendário
-      }
-    });
   });
 </script>
 
-<style> 
-
-.modal-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 400px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  position: relative;
-}
-
-.close-modal {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.timeline-btn {
-  margin: 10px;
-  padding: 8px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.timeline-btn:hover {
-  background-color: #0056b3;
-}
-
-
-.add-period-btn {
-  margin: 10px 0;
-  padding: 8px 15px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.add-period-btn:hover {
-  background-color: #0056b3;
-}
-
-.period-item {
-  background: #f4f4f4;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 8px;
-}
-
-.remove-period {
-  background: red;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 5px;
-  float: right;
-}
-
-.litepicker {
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-.litepicker .container__months {
-  display: flex;
-  justify-content: center;
-}
-
-.litepicker .month-item {
-  padding: 10px;
-}
-
-.litepicker .day-item {
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
-  font-size: 16px;
-}
-
-.litepicker .day-item.is-start-date,
-.litepicker .day-item.is-end-date {
-  background-color: navy;
-  color: white;
-}
-
-.litepicker .day-item.is-in-range {
-  background-color: rgba(0, 0, 139, 0.2);
-  border-radius: 20px;
-}
-
-
-
-.broadcast-card-desktop-edit {
-    position: relative;
-    padding: 0;
-    background-image: url(/assets/off.png);
-    background-size: 240px 400px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    width: 240px;
-    height: 469px;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    top: 19px;
-}
-#calendar_field
-{
-position: fixed;
-    width: 311px;
-    top: 195px;
-    right: 110px;
-    background: white;
-    padding: 14px;
-    z-index: 306;
-    border-radius: 0px 25px 25px 0px;
-    }
-.delete-btn {
-    color: #ffffff;
-    font-weight: bold;
-    text-decoration: none;
-    margin: 0;
-    position: absolute;
-    z-index: 1;
-    top: 0;
-    font-size: 34px;
-    background-color: red;
-    border: 0;
-    border-radius: 7px 0;
-}
-
-.delete-btn:hover {
-  color: darkred;
-  text-decoration: underline;
-}
-
-.broadcasts-container-edit {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-    flex-direction: row;
-    align-content: center;
-    align-items: stretch;
-    color: white;
-    margin-top: 122px;
-
-}
-
-.shadow-effect {
-    border-radius: 5px;
-    width: -webkit-fill-available;
-    height: -webkit-fill-available;
-    position: absolute;
-    background: linear-gradient(to top, rgb(0 0 0 / 97%) 0%, rgb(255 255 255 / 0%) 100%);
-}
-
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f3f4f6;
-    margin: auto;
-    display: flex;
-    justify-content: center;
-    height: 100vh;
-    flex-direction: column;
-}
-
-h1 {
-    text-align: center;
-    color: #ffffff;
-    top: 0;
-    position: absolute;
-    width: -webkit-fill-available;
-    background-color: #a4a5ab;
-    padding: 27px;
-    margin: 0;
-    height: 60px;
-}
-h1::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: -webkit-fill-available;
-  height: 3px;
-  background: radial-gradient(circle at center top, rgb(255 111 0) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-}
+<style>
+  /* Estilos específicos para a view de edição */
+  .edit-broadcast-view {
+    animation: fadeIn 0.3s ease;
+  }
   
-.field {
-  margin-bottom: 20px;
-}
-
-.input-field {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-.submit-btn {
-  width: 100%;
-  padding: 10px;
-  background-color: #45a049;
-  color: white;
-  font-size: 18px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.submit-btn:hover {
-  background-color: #387a3e;
-}
-
-.field {
-  text-shadow: 0 0 10px rgb(0 0 0);
-}
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .d-none {
+    display: none !important;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 24px;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .schedules-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .schedules-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+  
+  .schedules-list::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+  }
 </style>

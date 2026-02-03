@@ -1,144 +1,577 @@
-<!-- app/views/broadcasts/new.html.erb -->
-<h1><%= I18n.t('New Broadcast') %></h1>
+<div class="new-broadcast-container">
+  <!-- Header -->
+  <div class="page-header" style="margin-bottom: 32px;">
+    <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">
+      <i class="fas fa-plus-circle" style="color: var(--primary); margin-right: 12px;"></i>
+      Criar Novo Broadcast
+    </h1>
+    <p style="color: #94a3b8;">
+      Configure uma nova transmissão de vídeo para sua TV digital
+    </p>
+  </div>
 
-<%= form_with(model: @broadcast, local: true, class: 'edit-broadcast-form') do |form| %>
-  <% if @broadcast.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(@broadcast.errors.count, "error") %> prohibited this broadcast from being saved:</h2>
-      <ul>
-        <% @broadcast.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
+  <!-- Grid Principal -->
+  <div class="grid grid-cols-2" style="gap: 32px; min-height: calc(100vh - 200px);">
+    
+    <!-- COLUNA ESQUERDA: Formulário de Criação -->
+    <div class="space-y-6">
+      <!-- Card do Formulário -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-tv" style="margin-right: 10px;"></i>
+            Configurações do Broadcast
+          </h2>
+        </div>
+        
+        <div class="card-body">
+          <%= form_with(model: @broadcast, local: true, class: 'new-broadcast-form') do |form| %>
+            
+            <% if @broadcast.errors.any? %>
+              <div class="form-errors" 
+                   style="background: rgba(247, 37, 133, 0.1); padding: 16px; 
+                          border-radius: var(--border-radius-sm); border-left: 4px solid var(--danger);
+                          margin-bottom: 24px;">
+                <h3 style="color: var(--danger); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <%= pluralize(@broadcast.errors.count, "erro") %> encontrado(s):
+                </h3>
+                <ul style="color: #fecdd3; font-size: 14px; padding-left: 20px;">
+                  <% @broadcast.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <!-- Campo: Nome -->
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-font" style="margin-right: 8px;"></i>
+                Nome do Broadcast
+              </label>
+              <%= form.text_field :name, 
+                  class: 'form-input',
+                  placeholder: 'Ex: TV Sala de Reuniões, TV Recepção...',
+                  required: true,
+                  autofocus: true %>
+              <div class="form-hint" style="color: #64748b; font-size: 12px; margin-top: 6px;">
+                Um nome descritivo para identificar esta transmissão
+              </div>
+            </div>
+
+            <!-- Campo: Upload do Vídeo -->
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-video" style="margin-right: 8px;"></i>
+                Vídeo Principal
+              </label>
+              
+              <div class="upload-zone" id="video-upload-zone">
+                <div class="upload-content">
+                  <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: var(--primary); margin-bottom: 16px;"></i>
+                  <p style="color: #94a3b8; margin-bottom: 8px;">
+                    Arraste e solte seu arquivo de vídeo aqui
+                  </p>
+                  <p style="color: #64748b; font-size: 13px;">
+                    ou clique para selecionar
+                  </p>
+                  <p style="color: #475569; font-size: 11px; margin-top: 12px;">
+                    Formatos suportados: MP4, MOV, AVI, MKV • Máx: 2GB
+                  </p>
+                </div>
+                <%= form.file_field :video, 
+                    id: 'broadcast-video',
+                    class: 'd-none',
+                    accept: 'video/*',
+                    required: true,
+                    onchange: 'handleVideoUpload(this)' %>
+              </div>
+              
+              <div id="video-preview" class="d-none" style="margin-top: 16px;">
+                <div class="video-info" 
+                     style="background: rgba(15, 23, 42, 0.5); padding: 12px; 
+                            border-radius: var(--border-radius-sm); display: flex; 
+                            align-items: center; gap: 12px;">
+                  <i class="fas fa-file-video" style="color: var(--success); font-size: 20px;"></i>
+                  <div style="flex: 1;">
+                    <div id="video-name" style="color: white; font-weight: 500;"></div>
+                    <div id="video-size" style="color: #94a3b8; font-size: 12px;"></div>
+                  </div>
+                  <button type="button" onclick="removeVideo()" 
+                          style="background: none; border: none; color: #f87171; cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Configurações Avançadas (Accordion) -->
+            <div class="advanced-settings">
+              <div class="accordion-header" 
+                   onclick="toggleAccordion('advanced-settings-content')"
+                   style="background: rgba(15, 23, 42, 0.5); padding: 12px 16px; 
+                          border-radius: var(--border-radius-sm); cursor: pointer;
+                          display: flex; justify-content: space-between; align-items: center;
+                          margin-bottom: 0; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <span style="color: #cbd5e1; font-weight: 500;">
+                  <i class="fas fa-sliders-h" style="margin-right: 8px;"></i>
+                  Configurações Avançadas
+                </span>
+                <i class="fas fa-chevron-down" id="advanced-arrow"></i>
+              </div>
+              
+              <div class="accordion-content" id="advanced-settings-content" 
+                   style="padding: 20px; background: rgba(15, 23, 42, 0.3); 
+                          border-radius: 0 0 var(--border-radius-sm) var(--border-radius-sm);
+                          border: 1px solid rgba(255, 255, 255, 0.1); border-top: none;
+                          display: none;">
+                
+                <!-- Widgets -->
+                <div class="form-group">
+                  <div class="toggle-switch">
+                    <%= form.check_box :show_widgets, class: 'toggle-input' %>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label" style="color: #cbd5e1; font-weight: 500;">
+                      Mostrar Widgets na Transmissão
+                    </span>
+                  </div>
+                  <div class="form-hint" style="color: #64748b; font-size: 12px; margin-top: 6px;">
+                    Exibe informações como data, hora e temperatura sobre o vídeo
+                  </div>
+                </div>
+
+                <!-- Orientação -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <i class="fas fa-expand-alt" style="margin-right: 8px;"></i>
+                    Orientação da Tela
+                  </label>
+                  <div class="orientation-selector" style="display: flex; gap: 12px; margin-top: 8px;">
+                    <label class="orientation-option">
+                      <%= form.radio_button :orientation, 'portrait', checked: true, class: 'd-none' %>
+                      <div class="orientation-preview" data-value="portrait"
+                           style="padding: 20px; border: 2px solid var(--primary); 
+                                  background: rgba(67, 97, 238, 0.1); border-radius: var(--border-radius-sm);
+                                  text-align: center; cursor: pointer; flex: 1;">
+                        <div style="width: 40px; height: 70px; margin: 0 auto; 
+                             background: var(--primary); border-radius: 4px;"></div>
+                        <div style="margin-top: 12px; color: white; font-weight: 500;">
+                          Retrato
+                        </div>
+                        <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">
+                          Smartphones, Tablets
+                        </div>
+                      </div>
+                    </label>
+                    
+                    <label class="orientation-option">
+                      <%= form.radio_button :orientation, 'landscape', class: 'd-none' %>
+                      <div class="orientation-preview" data-value="landscape"
+                           style="padding: 20px; border: 2px solid transparent; 
+                                  background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-sm);
+                                  text-align: center; cursor: pointer; flex: 1;">
+                        <div style="width: 70px; height: 40px; margin: 0 auto; 
+                             background: #475569; border-radius: 4px;"></div>
+                        <div style="margin-top: 12px; color: #cbd5e1; font-weight: 500;">
+                          Paisagem
+                        </div>
+                        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">
+                          TVs, Monitores
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div style="display: flex; gap: 12px; margin-top: 32px;">
+              <%= link_to broadcasts_path, 
+                    class: 'btn btn-secondary',
+                    style: 'flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;' do %>
+                <i class="fas fa-arrow-left"></i>
+                Cancelar
+              <% end %>
+              
+              <%= form.submit '🚀 Criar Broadcast', 
+                    class: 'btn btn-primary',
+                    style: 'flex: 1;',
+                    data: { disable_with: '<i class="fas fa-spinner fa-spin"></i> Criando...' } %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Dicas Rápidas -->
+      <div class="card" style="border-color: var(--success); background: rgba(76, 201, 240, 0.05);">
+        <div class="card-header">
+          <h2 class="card-title" style="color: var(--success);">
+            <i class="fas fa-lightbulb"></i>
+            Dicas Rápidas
+          </h2>
+        </div>
+        <div class="card-body">
+          <ul style="color: #bae6fd; font-size: 14px; list-style: none; padding: 0;">
+            <li style="margin-bottom: 12px; display: flex; gap: 12px; align-items: flex-start;">
+              <i class="fas fa-check-circle" style="color: var(--success); margin-top: 2px;"></i>
+              <span>Você poderá agendar vídeos específicos após a criação</span>
+            </li>
+            <li style="margin-bottom: 12px; display: flex; gap: 12px; align-items: flex-start;">
+              <i class="fas fa-check-circle" style="color: var(--success); margin-top: 2px;"></i>
+              <span>O vídeo principal será usado quando não houver agendamentos ativos</span>
+            </li>
+            <li style="display: flex; gap: 12px; align-items: flex-start;">
+              <i class="fas fa-check-circle" style="color: var(--success); margin-top: 2px;"></i>
+              <span>Todas as configurações podem ser alteradas posteriormente</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
-  <% end %>
 
-  <div class="broadcasts-container-edit">
-    <div class="broadcast-card-desktop mirror-effect" data-broadcast-id="desktop">
-      <label class="card-checkbox">
-       
-      </label>
-      <div class="shadow-effect"></div>
-      <div class="upload-desktop">
-        <div class="field">
-          <%= form.label :name %>
-          <%= form.text_field :name, class: 'input-field' %>
+    <!-- COLUNA DIREITA: Preview e Informações -->
+    <div class="space-y-6">
+      <!-- Preview -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-eye" style="margin-right: 10px;"></i>
+            Preview do Broadcast
+          </h2>
         </div>
-        
-        <div class="field">
-          <%= form.label :video %>
-          <%= form.file_field :video, class: 'input-field' %>
+        <div class="card-body">
+          <div class="preview-container" 
+               style="background: #0f172a; border-radius: var(--border-radius-sm); 
+                      overflow: hidden; aspect-ratio: 16/9; position: relative;">
+            
+            <!-- Mockup do Player -->
+            <div class="player-mockup" 
+                 style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+                        display: flex; flex-direction: column; align-items: center; 
+                        justify-content: center; color: #475569;">
+              
+              <!-- Mockup Video Placeholder -->
+              <div style="width: 80%; height: 60%; background: rgba(30, 41, 59, 0.8); 
+                   border-radius: 8px; display: flex; flex-direction: column; 
+                   align-items: center; justify-content: center;">
+                <i class="fas fa-video" style="font-size: 48px; margin-bottom: 16px;"></i>
+                <p style="color: #94a3b8; margin-bottom: 4px;">Prévia do Broadcast</p>
+                <p style="color: #64748b; font-size: 12px;">Selecione um vídeo para visualizar</p>
+              </div>
+              
+              <!-- Mockup Controls -->
+              <div style="width: 80%; margin-top: 20px; display: flex; gap: 12px;">
+                <div style="flex: 1; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px;"></div>
+                <div style="width: 40px; height: 4px; background: var(--primary); border-radius: 2px;"></div>
+                <div style="flex: 1; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px;"></div>
+              </div>
+              
+              <!-- Mockup Status -->
+              <div style="margin-top: 20px; display: flex; gap: 24px;">
+                <div style="text-align: center;">
+                  <div style="color: #94a3b8; font-size: 11px;">RESOLUÇÃO</div>
+                  <div style="color: white; font-size: 13px; font-weight: 500;">1920x1080</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="color: #94a3b8; font-size: 11px;">BITRATE</div>
+                  <div style="color: white; font-size: 13px; font-weight: 500;">5 Mbps</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="color: #94a3b8; font-size: 11px;">FPS</div>
+                  <div style="color: white; font-size: 13px; font-weight: 500;">30</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Overlay de Status -->
+            <div style="position: absolute; top: 16px; left: 16px;">
+              <div class="status-badge offline">
+                <span class="status-dot"></span>
+                Offline
+              </div>
+            </div>
+          </div>
+
+          <!-- Informações Técnicas -->
+          <div class="tech-info" 
+               style="margin-top: 20px; padding: 16px; background: rgba(15, 23, 42, 0.5); 
+                      border-radius: var(--border-radius-sm);">
+            <h3 style="color: white; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+              Especificações Técnicas
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px;">
+              <div>
+                <span style="color: #94a3b8;">Formato de Vídeo:</span>
+                <span style="color: white; margin-left: 8px;">H.264, H.265</span>
+              </div>
+              <div>
+                <span style="color: #94a3b8;">Áudio:</span>
+                <span style="color: white; margin-left: 8px;">AAC, MP3</span>
+              </div>
+              <div>
+                <span style="color: #94a3b8;">Streaming:</span>
+                <span style="color: white; margin-left: 8px;">HLS, MPEG-DASH</span>
+              </div>
+              <div>
+                <span style="color: #94a3b8;">Latência:</span>
+                <span style="color: white; margin-left: 8px;">2-5 segundos</span>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        <div class="field">
-  <%= form.label :show_widgets, 'Show Widgets' %>
-  <%= form.check_box :show_widgets %>
-</div>
+      </div>
 
+      <!-- Passo a Passo -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-list-ol" style="margin-right: 10px;"></i>
+            Como Funciona
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="steps" style="position: relative;">
+            <!-- Linha Conectora -->
+            <div style="position: absolute; left: 20px; top: 0; bottom: 0; 
+                 width: 2px; background: rgba(255, 255, 255, 0.1);"></div>
+            
+            <!-- Passo 1 -->
+            <div class="step" style="display: flex; gap: 16px; margin-bottom: 24px;">
+              <div style="width: 40px; height: 40px; background: var(--primary); 
+                   border-radius: 50%; display: flex; align-items: center; 
+                   justify-content: center; color: white; font-weight: 700; 
+                   flex-shrink: 0; position: relative; z-index: 1;">
+                1
+              </div>
+              <div>
+                <h4 style="color: white; margin-bottom: 4px;">Crie o Broadcast</h4>
+                <p style="color: #94a3b8; font-size: 14px;">
+                  Configure nome, vídeo principal e opções de exibição
+                </p>
+              </div>
+            </div>
 
-        <div class="actions">
-          <%= form.submit I18n.t('Create Broadcast'), class: 'submit-btn' %>
+            <!-- Passo 2 -->
+            <div class="step" style="display: flex; gap: 16px; margin-bottom: 24px;">
+              <div style="width: 40px; height: 40px; background: rgba(67, 97, 238, 0.2); 
+                   border: 2px solid var(--primary); border-radius: 50%; display: flex; 
+                   align-items: center; justify-content: center; color: var(--primary); 
+                   font-weight: 700; flex-shrink: 0; position: relative; z-index: 1;">
+                2
+              </div>
+              <div>
+                <h4 style="color: white; margin-bottom: 4px;">Agende Vídeos</h4>
+                <p style="color: #94a3b8; font-size: 14px;">
+                  Defina períodos específicos para diferentes conteúdos
+                </p>
+              </div>
+            </div>
+
+            <!-- Passo 3 -->
+            <div class="step" style="display: flex; gap: 16px; margin-bottom: 24px;">
+              <div style="width: 40px; height: 40px; background: rgba(67, 97, 238, 0.2); 
+                   border: 2px solid var(--primary); border-radius: 50%; display: flex; 
+                   align-items: center; justify-content: center; color: var(--primary); 
+                   font-weight: 700; flex-shrink: 0; position: relative; z-index: 1;">
+                3
+              </div>
+              <div>
+                <h4 style="color: white; margin-bottom: 4px;">Inicie a Transmissão</h4>
+                <p style="color: #94a3b8; font-size: 14px;">
+                  Ative o broadcast e monitore o status em tempo real
+                </p>
+              </div>
+            </div>
+
+            <!-- Passo 4 -->
+            <div class="step" style="display: flex; gap: 16px;">
+              <div style="width: 40px; height: 40px; background: rgba(67, 97, 238, 0.2); 
+                   border: 2px solid var(--primary); border-radius: 50%; display: flex; 
+                   align-items: center; justify-content: center; color: var(--primary); 
+                   font-weight: 700; flex-shrink: 0; position: relative; z-index: 1;">
+                4
+              </div>
+              <div>
+                <h4 style="color: white; margin-bottom: 4px;">Gerencie</h4>
+                <p style="color: #94a3b8; font-size: 14px;">
+                  Ajuste configurações e agendamentos conforme necessário
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-<% end %>
+</div>
 
-<style> 
-.delete-link {
-  color: red;
-  font-weight: bold;
-  text-decoration: none;
-}
+<script>
+  // Upload de Vídeo com Drag & Drop
+  document.addEventListener('DOMContentLoaded', function() {
+    const uploadZone = document.getElementById('video-upload-zone');
+    const fileInput = document.getElementById('broadcast-video');
+    
+    // Click na zona de upload
+    uploadZone.addEventListener('click', function(e) {
+      if (e.target !== fileInput) {
+        fileInput.click();
+      }
+    });
+    
+    // Drag & Drop
+    uploadZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      uploadZone.style.borderColor = 'var(--primary)';
+      uploadZone.style.background = 'rgba(67, 97, 238, 0.1)';
+    });
+    
+    uploadZone.addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      uploadZone.style.borderColor = '';
+      uploadZone.style.background = '';
+    });
+    
+    uploadZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadZone.style.borderColor = '';
+      uploadZone.style.background = '';
+      
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleVideoUpload(fileInput);
+      }
+    });
+    
+    // Selecionar orientação
+    document.querySelectorAll('.orientation-option').forEach(option => {
+      option.addEventListener('click', function() {
+        // Remover seleção anterior
+        document.querySelectorAll('.orientation-preview').forEach(preview => {
+          preview.style.borderColor = 'transparent';
+          preview.style.background = 'rgba(255, 255, 255, 0.05)';
+          preview.querySelector('div[style*="background"]').style.background = '#475569';
+          preview.querySelector('div:last-child').style.color = '#cbd5e1';
+        });
+        
+        // Aplicar seleção atual
+        const preview = this.querySelector('.orientation-preview');
+        preview.style.borderColor = 'var(--primary)';
+        preview.style.background = 'rgba(67, 97, 238, 0.1)';
+        preview.querySelector('div[style*="background"]').style.background = 'var(--primary)';
+        preview.querySelector('div:last-child').style.color = 'white';
+        
+        // Marcar radio button
+        this.querySelector('input[type="radio"]').checked = true;
+      });
+    });
+  });
+  
+  function handleVideoUpload(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const preview = document.getElementById('video-preview');
+      const uploadZone = document.getElementById('video-upload-zone');
+      
+      // Validar tamanho do arquivo (2GB máximo)
+      const maxSize = 2 * 1024 * 1024 * 1024; // 2GB em bytes
+      if (file.size > maxSize) {
+        alert('Arquivo muito grande! Tamanho máximo: 2GB');
+        input.value = '';
+        return;
+      }
+      
+      // Validar tipo de arquivo
+      const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
+      if (!validTypes.includes(file.type)) {
+        alert('Formato de vídeo não suportado! Use MP4, MOV, AVI ou MKV');
+        input.value = '';
+        return;
+      }
+      
+      // Atualizar informações do arquivo
+      document.getElementById('video-name').textContent = file.name;
+      document.getElementById('video-size').textContent = formatFileSize(file.size);
+      
+      // Mostrar preview e esconder zona de upload
+      preview.classList.remove('d-none');
+      uploadZone.style.display = 'none';
+      
+      // Criar preview do vídeo (opcional)
+      createVideoPreview(file);
+    }
+  }
+  
+  function removeVideo() {
+    const input = document.getElementById('broadcast-video');
+    const preview = document.getElementById('video-preview');
+    const uploadZone = document.getElementById('video-upload-zone');
+    
+    input.value = '';
+    preview.classList.add('d-none');
+    uploadZone.style.display = 'block';
+  }
+  
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+  
+  function createVideoPreview(file) {
+    // Implementação opcional para criar preview do vídeo
+    console.log('Arquivo carregado:', file.name);
+  }
+  
+  function toggleAccordion(id) {
+    const content = document.getElementById(id);
+    const arrow = document.getElementById('advanced-arrow');
+    
+    if (content.style.display === 'none' || content.style.display === '') {
+      content.style.display = 'block';
+      arrow.classList.remove('fa-chevron-down');
+      arrow.classList.add('fa-chevron-up');
+    } else {
+      content.style.display = 'none';
+      arrow.classList.remove('fa-chevron-up');
+      arrow.classList.add('fa-chevron-down');
+    }
+  }
+</script>
 
-.delete-link:hover {
-  color: darkred;
-  text-decoration: underline;
-}
-
-.broadcasts-container-edit {
-    flex-wrap: wrap;
-    gap: 15px;
-    z-index: 800;
-    justify-content: center;
-    flex-direction: row;
-    align-content: center;
-    align-items: stretch;
-    color: white;
-    display: flex
-;
-margin-top: 59px;
-}
-
-.shadow-effect {
-    border-radius: 5px;
-    width: -webkit-fill-available;
-    height: -webkit-fill-available;
-    position: absolute;
-    background: linear-gradient(to top, rgb(0 0 0 / 97%) 0%, rgb(255 255 255 / 0%) 100%);
-}
-
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f3f4f6;
-    margin: auto;
-    display: flex;
-    justify-content: center;
-    height: 100vh;
-    flex-direction: column;
-}
-
-h1 {
+<style>
+  .new-broadcast-container {
+    animation: fadeIn 0.4s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .upload-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-sm);
+    padding: 40px 20px;
     text-align: center;
-    color: #ffffff;
-    top: 0;
-    position: absolute;
-    width: -webkit-fill-available;
-    background-color: #a4a5ab;
-    padding: 27px;
-    margin: 0;
-    height: 64px;
-}
-h1::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: -webkit-fill-available;
-  height: 3px;
-  background: radial-gradient(circle at center top, rgb(255 111 0) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-}
-.field {
-  margin-bottom: 20px;
-}
-
-.input-field {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-.submit-btn {
-  width: 100%;
-  padding: 10px;
-  background-color: #45a049;
-  color: white;
-  font-size: 18px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.submit-btn:hover {
-  background-color: #387a3e;
-}
-
-
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .upload-zone:hover {
+    border-color: var(--primary);
+    background: rgba(67, 97, 238, 0.05);
+  }
+  
+  .upload-content {
+    pointer-events: none;
+  }
+  
+  .steps .step:hover {
+    transform: translateX(4px);
+  }
 </style>

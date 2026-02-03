@@ -1,288 +1,336 @@
-<!-- Banner no topo com logo -->
-
-<div class="banner">
- 
-  <%= image_tag('logo.png', alt: 'Logo', class: 'logo') %>
-
-
-
-
-  <!-- Barra de ferramentas abaixo do banner -->
-  <div class="toolbar">
-    <%= link_to I18n.t('AddNewTV'), new_broadcast_path, class: "new-broadcast-button" %>
-
-    <!-- Formulário de exportação M3U -->
-     <% if current_user.admin? %>
-    <%= form_with(url: export_m3u_broadcasts_path, method: :get, local: true) do %>
-      <%= submit_tag I18n.t('Export M3U'), class: "export-m3u-button" %>
-    <% end %>
-    <%= link_to I18n.t('Configuration'), edit_streaming_configuration_path(1), class: "new-broadcast-button" %>
-    <% end %>
+<div class="dashboard-container">
+  <!-- Header do Dashboard -->
+  <div class="dashboard-header" style="margin-bottom: 32px;">
+    <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">
+      <i class="fas fa-satellite-dish" style="color: var(--primary); margin-right: 12px;"></i>
+      Painel de Broadcasts
+    </h1>
+    <p style="color: var(--gray-400);">
+      Gerencie todas as suas transmissões de vídeo em um só lugar
+    </p>
   </div>
-</div>
-
-<h1 class="Broadcasts"><%= I18n.t('Broadcasts') %> </h1>
-
-<%= form_with(url: execute_broadcasts_path, method: :post, local: true, class: "broadcast-form") do %>
-  <div class="broadcasts-container smart-scroll">
+  
+  <!-- Estatísticas Rápidas -->
+  <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+    <div class="stat-card" style="background: rgba(67, 97, 238, 0.1); padding: 20px; border-radius: var(--border-radius-sm); border-left: 4px solid var(--primary);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="background: rgba(67, 97, 238, 0.2); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+          <i class="fas fa-tv" style="color: var(--primary); font-size: 20px;"></i>
+        </div>
+        <div>
+          <div style="font-size: 24px; font-weight: 700; color: white;">
+            <%= @broadcasts.count %>
+          </div>
+          <div style="font-size: 14px; color: var(--gray-400);">Broadcasts Totais</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="stat-card" style="background: rgba(76, 201, 240, 0.1); padding: 20px; border-radius: var(--border-radius-sm); border-left: 4px solid var(--success);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="background: rgba(76, 201, 240, 0.2); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+          <i class="fas fa-play-circle" style="color: var(--success); font-size: 20px;"></i>
+        </div>
+        <div>
+          <div style="font-size: 24px; font-weight: 700; color: white;">
+            <%= @broadcasts.where(status: 'running').count %>
+          </div>
+          <div style="font-size: 14px; color: var(--gray-400);">Online Agora</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="stat-card" style="background: rgba(248, 150, 30, 0.1); padding: 20px; border-radius: var(--border-radius-sm); border-left: 4px solid var(--warning);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="background: rgba(248, 150, 30, 0.2); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+          <i class="fas fa-calendar-check" style="color: var(--warning); font-size: 20px;"></i>
+        </div>
+        <div>
+          <div style="font-size: 24px; font-weight: 700; color: white;">
+            <%= Schedule.count %>
+          </div>
+          <div style="font-size: 14px; color: var(--gray-400);">Agendamentos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Barra de Ações -->
+  <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 16px; background: rgba(30, 41, 59, 0.8); border-radius: var(--border-radius-sm);">
+    <div>
+      <h2 style="font-size: 18px; color: white;">Seus Broadcasts</h2>
+      <p style="font-size: 13px; color: var(--gray-400); margin-top: 4px;">
+        Gerencie e monitore todas as transmissões
+      </p>
+    </div>
+    
+    <div style="display: flex; gap: 12px;">
+      <%= link_to new_broadcast_path, 
+            class: 'btn btn-primary',
+            style: 'display: flex; align-items: center; gap: 8px;' do %>
+        <i class="fas fa-plus"></i>
+        Novo Broadcast
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Grid de Broadcasts -->
+  <div class="broadcasts-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; margin-bottom: 48px;">
+    
     <% @broadcasts.each do |broadcast| %>
-     <div class="broadcast-card mirror-effect scroll-section" data-broadcast-id="<%= broadcast.id %>">
-        <label class="card-checkbox">
-          <span class="card-title"><%= broadcast.name %></span>
-        </label>
-        <div class="video-container">
-          <video class="broadcast-video vjs-default-skin" autoplay muted>
-            <source src="<%= broadcast.stream_url %>" type="application/x-mpegURL">
-            Seu navegador não suporta a reprodução de vídeo.
-          </video>
+      <div class="broadcast-card" 
+           data-broadcast-id="<%= broadcast.id %>"
+           style="background: rgba(30, 41, 59, 0.8); border-radius: var(--border-radius); border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; transition: var(--transition); position: relative;">
+        
+        <!-- Header do Card -->
+        <div class="card-header" style="padding: 20px; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h3 style="font-weight: 600; color: white; margin-bottom: 4px;">
+                <%= broadcast.name %>
+              </h3>
+              <div class="status-badge <%= broadcast.status == 'running' ? 'online' : 'offline' %>"
+                   style="display: inline-flex;">
+                <span class="status-dot"></span>
+                <%= broadcast.status == 'running' ? 'Online' : 'Offline' %>
+              </div>
+            </div>
+            
+            <div class="card-actions" style="display: flex; gap: 8px;">
+              <%= button_tag type: 'button',
+                    class: 'card-action-btn',
+                    style: 'background: rgba(67, 97, 238, 0.2); width: 32px; height: 32px; border-radius: 50%; border: none; color: var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center;',
+                    onclick: "toggleBroadcast(#{broadcast.id})",
+                    data: { broadcast_id: broadcast.id } do %>
+                <i class="fas fa-<%= broadcast.status == 'running' ? 'pause' : 'play' %>"></i>
+              <% end %>
+              
+              <%= link_to edit_broadcast_path(broadcast),
+                    class: 'card-action-btn',
+                    style: 'background: rgba(255, 255, 255, 0.1); width: 32px; height: 32px; border-radius: 50%; border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none;' do %>
+                <i class="fas fa-edit"></i>
+              <% end %>
+            </div>
+          </div>
+          
+          <!-- Indicador de Vídeo -->
+          <% if broadcast.video.attached? %>
+            <div style="position: absolute; top: 20px; right: 20px;">
+              <i class="fas fa-video" style="color: var(--primary);"></i>
+            </div>
+          <% end %>
         </div>
         
-        <!-- Exibindo o status: Online ou Offline -->
-        <div class="status-indicator <%= 'online' if broadcast.status == 'running' %><%= 'offline' if broadcast.status == 'stopped' %>">
-          <%= broadcast.status == 'running' ? 'Online' : 'Offline' %>
-        </div>
-
-        <!-- Rodapé com Botões de Controle -->
-        <div class="card-footer">
-          <%= form_with(url: start_broadcast_path(broadcast), method: :post, local: true) do %>
-            <%= submit_tag I18n.t('Play'), class: 'btn btn-play' %>
+        <!-- Preview do Vídeo -->
+        <div class="video-preview" 
+             style="background: #0f172a; height: 160px; position: relative;">
+          <% if broadcast.video.attached? %>
+            <video style="width: 100%; height: 100%; object-fit: cover;"
+                   onclick="playPreview(this)">
+              <source src="<%= url_for(broadcast.video) %>" type="video/mp4">
+            </video>
+            <div class="play-overlay" 
+                 onclick="playPreview(this.parentElement.querySelector('video'))"
+                 style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+              <div style="background: rgba(255, 255, 255, 0.2); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-play" style="color: white; font-size: 20px;"></i>
+              </div>
+            </div>
+          <% else %>
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--gray-500);">
+              <i class="fas fa-video-slash" style="font-size: 48px;"></i>
+            </div>
           <% end %>
-
-          <%= form_with(url: stop_broadcast_path(broadcast), method: :post, local: true) do %>
-            <%= submit_tag I18n.t('Stop'), class: 'btn btn-stop' %>
-          <% end %>
-
-         <%= button_to I18n.t('Edit'), edit_broadcast_path(broadcast), method: :get, class: 'btn btn-edit' %>
         </div>
-        <p class="name-video"><%= broadcast.video.filename.to_s %></p>
-
+        
+        <!-- Informações do Broadcast -->
+        <div class="card-info" style="padding: 16px 20px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; font-size: 13px;">
+            <div>
+              <div style="color: var(--gray-400);">Widgets</div>
+              <div style="color: white; font-weight: 500;">
+                <%= broadcast.show_widgets ? 'Ativos' : 'Inativos' %>
+              </div>
+            </div>
+            <div>
+              <div style="color: var(--gray-400);">Orientação</div>
+              <div style="color: white; font-weight: 500;">
+                <%= broadcast.orientation == 'portrait' ? 'Retrato' : 'Paisagem' %>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Rodapé com Ações -->
+          <div style="display: flex; gap: 8px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <%= form_with(url: start_broadcast_path(broadcast), 
+                  method: :post, 
+                  local: true,
+                  style: 'flex: 1;',
+                  data: { turbo: false }) do %>
+              <%= button_tag type: 'submit',
+                    class: 'btn',
+                    style: 'width: 100%; padding: 8px; font-size: 13px; background: rgba(76, 201, 240, 0.2);' do %>
+                <i class="fas fa-play"></i> Iniciar
+              <% end %>
+            <% end %>
+            
+            <%= form_with(url: stop_broadcast_path(broadcast), 
+                  method: :post, 
+                  local: true,
+                  style: 'flex: 1;',
+                  data: { turbo: false }) do %>
+              <%= button_tag type: 'submit',
+                    class: 'btn',
+                    style: 'width: 100%; padding: 8px; font-size: 13px; background: rgba(247, 37, 133, 0.2);' do %>
+                <i class="fas fa-stop"></i> Parar
+              <% end %>
+            <% end %>
+          </div>
+        </div>
       </div>
     <% end %>
-  </div>
-
-  <!-- Barra de Rodapé com Botão Play All Selected -->
-  <div class="footer-bar">
-  <p class="Versão"> Versão 1.0.9.0 </p>
-  <!-- <%= submit_tag 'Play Selected', class: "play-button" %> -->
-  <!-- <%= button_to 'Stop All', stop_all_broadcasts_path, method: :post, class: "stop-all-button" %>  -->
-  </div>
-<% end %>
-
-<!-- Desktop Upload Section -->
-<div class="broadcasts-container smart-scroll">
-  <h1 class="BroadcastsDesk"> <%= I18n.t('Broadcasts') %> </h1>
-  <div class="broadcast-card-desktop mirror-effect scroll-section" data-broadcast-id="desktop">
-    <label class="card-checkbox">
-      <span class="card-title"><%= I18n.t('Desktop') %></span>
-    </label>
-    <div class="upload-desktop">
-      <!-- Formulário para Adicionar Wallpaper -->
-      <%= form_with(url: wallpapers_path, method: :post, local: true, multipart: true, id: "wallpaper-upload-form") do %>
-        <%= file_field_tag :wallpaper, class: "upload-wallpaper" %>
-        <%= submit_tag I18n.t('Upload Wallpaper'), class: "set-wallpaper-button" %>
-      <% end %>
+    
+    <!-- Card para Novo Broadcast -->
+    <div class="new-broadcast-card" 
+         onclick="window.location.href='<%= new_broadcast_path %>'"
+         style="background: rgba(30, 41, 59, 0.5); border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: var(--border-radius); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition);">
+      <div style="text-align: center; padding: 40px 20px;">
+        <div style="width: 64px; height: 64px; background: rgba(67, 97, 238, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+          <i class="fas fa-plus" style="color: var(--primary); font-size: 24px;"></i>
+        </div>
+        <h3 style="color: white; margin-bottom: 8px;">Novo Broadcast</h3>
+        <p style="color: var(--gray-400); font-size: 14px;">
+          Clique para criar uma nova transmissão
+        </p>
+      </div>
     </div>
   </div>
 </div>
 
-
-<!-- Adicionando a biblioteca Video.js se necessário -->
-<link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet" />
-<script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
-<!-- Notificações -->
-<div id="notification-container" class="notification-container"></div>
-
+<!-- Container de Notificações -->
+<div id="notification-container" style="position: fixed; top: 84px; right: 24px; z-index: 9999;"></div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var players = document.querySelectorAll('.broadcast-video');
-    players.forEach(function(video) {
-      var player = videojs(video); // Inicializa o Video.js para cada vídeo
-
-      player.on('error', function() {
-        // O vídeo não pôde ser reproduzido, oculta o contêiner do vídeo
-        var videoContainer = video.parentElement; // Obtém o contêiner do vídeo
-        videoContainer.style.display = 'none'; // Esconde o contêiner
-      });
-
-      player.ready(function() {
-        // Configurações adicionais do player podem ser adicionadas aqui, se necessário
-      });
-    });
-  });
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const cards = document.querySelectorAll(".broadcast-card");
-
-    cards.forEach(card => {
-      card.addEventListener("click", (event) => {
-        // Remove a classe 'selected' de todos os cards
-        cards.forEach(c => {
-          c.classList.remove("selected");
-          c.classList.add("mirror-effect"); // Adiciona efeito espelho
-        });
-
-        // Adiciona a classe 'selected' ao card clicado
-        card.classList.add("selected");
-        card.classList.remove("mirror-effect"); // Remove efeito espelho
-
-        const broadcastId = card.getAttribute("data-broadcast-id");
-        const broadcastName = card.querySelector(".card-title").innerText;
-
-        // Impede a propagação do evento de clique para o documento
-        event.stopPropagation();
-      });
-    });
-
-    // Fecha o menu de edição ao clicar fora
-    document.addEventListener("click", (event) => {
-      const editMenu = document.getElementById("edit-menu");
-      if (!editMenu.contains(event.target)) {
-        editMenu.classList.add("hidden");
-        // Remove a classe 'selected' de todos os cards
-        cards.forEach(c => {
-          c.classList.remove("selected");
-          c.classList.add("mirror-effect"); // Adiciona efeito espelho
-        });
-      }
-    });
-
-    // Selecione todos os botões "Play"
-    const playButtons = document.querySelectorAll('.btn-play');
+  function toggleBroadcast(broadcastId) {
+    const card = document.querySelector(`[data-broadcast-id="${broadcastId}"]`);
+    const playBtn = card.querySelector('.card-action-btn i');
+    const isRunning = playBtn.classList.contains('fa-pause');
     
-
-    playButtons.forEach(button => {
-      button.addEventListener('click', function(event) {
-        const broadcastId = button.getAttribute('data-broadcast-id');
-        const card = document.querySelector(`.broadcast-card[data-broadcast-id='${broadcastId}']`);
-        const videoContainer = card.querySelector('.video-container');
-        const video = videoContainer.querySelector('video');
-
-        // Pause todos os vídeos
-        const allVideos = document.querySelectorAll('.broadcast-video');
-        allVideos.forEach(v => v.pause());  // Pausa qualquer vídeo em execução
-
-        // Esconde todos os contêineres de vídeo
-        const allVideoContainers = document.querySelectorAll('.video-container');
-        allVideoContainers.forEach(container => container.style.display = 'none');
-
-        // Exibe o vídeo do broadcast selecionado
-        videoContainer.style.display = 'block';
-        video.play(); // Começa a reprodução do vídeo correspondente
-
-        // Impede a propagação do clique para o documento
-        event.stopPropagation();
+    if (isRunning) {
+      // Parar broadcast
+      fetch(`/broadcasts/${broadcastId}/stop`, { 
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          playBtn.classList.replace('fa-pause', 'fa-play');
+          const statusBadge = card.querySelector('.status-badge');
+          statusBadge.classList.remove('online');
+          statusBadge.classList.add('offline');
+          statusBadge.innerHTML = '<span class="status-dot"></span> Offline';
+          showNotification('Broadcast parado com sucesso', 'success');
+        } else {
+          showNotification('Erro ao parar o broadcast', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showNotification('Erro de conexão', 'error');
       });
-    });
-
-    // Lógica para o botão "Play Selected"
-    const playSelectedButton = document.querySelector('.play-button');
-    playSelectedButton.addEventListener('click', function(event) {
-      const selectedBroadcasts = document.querySelectorAll('.broadcast-card.selected');
-      selectedBroadcasts.forEach(card => {
-        const videoContainer = card.querySelector('.video-container');
-        const video = videoContainer.querySelector('video');
-
-        // Pausa todos os vídeos
-        const allVideos = document.querySelectorAll('.broadcast-video');
-        allVideos.forEach(v => v.pause());  // Pausa qualquer vídeo em execução
-
-        // Esconde todos os contêineres de vídeo
-        const allVideoContainers = document.querySelectorAll('.video-container');
-        allVideoContainers.forEach(container => container.style.display = 'none');
-
-        // Exibe o vídeo do broadcast selecionado
-        videoContainer.style.display = 'block';
-        video.play(); // Começa a reprodução do vídeo correspondente
+    } else {
+      // Iniciar broadcast
+      fetch(`/broadcasts/${broadcastId}/start`, { 
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          playBtn.classList.replace('fa-play', 'fa-pause');
+          const statusBadge = card.querySelector('.status-badge');
+          statusBadge.classList.remove('offline');
+          statusBadge.classList.add('online');
+          statusBadge.innerHTML = '<span class="status-dot"></span> Online';
+          showNotification('Broadcast iniciado com sucesso', 'success');
+        } else {
+          showNotification('Erro ao iniciar o broadcast', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showNotification('Erro de conexão', 'error');
       });
-
-      event.stopPropagation();
-    });
-  });
-
-  // script scroll
-  document.addEventListener("DOMContentLoaded", function () {
-  const sections = Array.from(document.querySelectorAll(".scroll-section"));
-  let isAutoScrolling = false;
-  let lastScrollY = window.scrollY;
-  let scrollDirection = "down";
-
-  // Detecta a direção do scroll
-  window.addEventListener("scroll", () => {
-    const currentScrollY = window.scrollY;
-    scrollDirection = currentScrollY > lastScrollY ? "down" : "up";
-    lastScrollY = currentScrollY;
-  });
-
-  // Encontra o índice da seção mais próxima ao topo da janela
-  function getCurrentSectionIndex() {
-    const scrollY = window.scrollY;
-    let closestIndex = 0;
-    let minDistance = Infinity;
-
-    sections.forEach((section, index) => {
-      const distance = Math.abs(section.offsetTop - scrollY);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = index;
-      }
-    });
-
-    return closestIndex;
+    }
   }
-
-  let scrollTimeout;
-  window.addEventListener("scroll", function () {
-    if (isAutoScrolling) return;
-
-    clearTimeout(scrollTimeout);
-
-    scrollTimeout = setTimeout(() => {
-      const currentIndex = getCurrentSectionIndex();
-
-      let nextIndex;
-      if (scrollDirection === "down") {
-        nextIndex = Math.min(currentIndex + 50, sections.length - 5);
-      } else {
-        nextIndex = Math.max(currentIndex - 50, 0);
-      }
-
-      if (nextIndex !== currentIndex) {
-        isAutoScrolling = true;
-        sections[nextIndex].scrollIntoView({ behavior: "smooth", block: "start" });
-
-        setTimeout(() => {
-          isAutoScrolling = false;
-        }, 700); // evita múltiplos scrolls automáticos
-      }
-    }, 1000); // espera parar o scroll
-  });
-});
-
-// script notificação
-
-  document.addEventListener("DOMContentLoaded", function () {
-    <% if flash[:notice].present? %>
-      showNotification("<%= j flash[:notice] %>");
-    <% end %>
-
-    <% if flash[:alert].present? %>
-      showNotification("<%= j flash[:alert] %>");
-    <% end %>
-  });
-
-  function showNotification(message) {
-    const container = document.getElementById("notification-container");
-    const notification = document.createElement("div");
-    notification.className = "notification";
-    notification.innerText = message;
-
+  
+  function playPreview(videoElement) {
+    if (videoElement.paused) {
+      videoElement.play();
+      videoElement.controls = true;
+      videoElement.parentElement.querySelector('.play-overlay').style.display = 'none';
+    }
+  }
+  
+  function showNotification(message, type = 'info') {
+    const container = document.getElementById('notification-container');
+    const notification = document.createElement('div');
+    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+    const bgColor = type === 'success' ? 'rgba(76, 201, 240, 0.9)' : 
+                   type === 'error' ? 'rgba(247, 37, 133, 0.9)' : 
+                   'rgba(67, 97, 238, 0.9)';
+    
+    notification.innerHTML = `
+      <div style="background: ${bgColor}; color: white; padding: 12px 20px; border-radius: var(--border-radius-sm); margin-bottom: 12px; box-shadow: var(--shadow); min-width: 300px; backdrop-filter: blur(10px); animation: slideIn 0.3s ease;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 20px;">${icon}</span>
+          <div>
+            <div style="font-weight: 500;">${message}</div>
+            <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
+              ${new Date().toLocaleTimeString()}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
     container.appendChild(notification);
-
+    
+    // Remover após 5 segundos
     setTimeout(() => {
-      notification.remove();
-    }, 4000);
+      notification.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => notification.remove(), 300);
+    }, 5000);
   }
 </script>
+
+<style>
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+  
+  .broadcast-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .new-broadcast-card:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: var(--primary);
+    transform: translateY(-4px);
+  }
+  
+  .card-action-btn:hover {
+    transform: scale(1.1);
+  }
+</style>

@@ -1,71 +1,847 @@
-<%= javascript_importmap_tags %>
-<%= javascript_import_module_tag "broadcasts" %>
-
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>SoftexTv</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
-
-    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-    <%= javascript_importmap_tags %>
-
-    <meta name="csrf-token" content="<%= csrf_meta_tags %>">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  </head>
-
-  <body>
-   <% unless controller_name == "license" && (action_name == "new" || action_name == "create") %>  
-    <div class="container">
-      <% unless controller_name == "sessions" && action_name == "new" %>
+<html lang="<%= I18n.locale %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoftexTV - Broadcast Control Panel</title>
+  
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
+  
+  <!-- Fontes & Ícones -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Video.js -->
+  <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet">
+  
+  <!-- Litepicker CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+  
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --primary-light: rgba(67, 97, 238, 0.1);
+      --secondary: #7209b7;
+      --success: #4cc9f0;
+      --success-light: rgba(76, 201, 240, 0.1);
+      --danger: #f72585;
+      --danger-light: rgba(247, 37, 133, 0.1);
+      --warning: #f8961e;
+      --warning-light: rgba(248, 150, 30, 0.1);
+      --dark: #0f172a;
+      --dark-800: #1e293b;
+      --dark-700: #334155;
+      --dark-600: #475569;
+      --light: #f8fafc;
+      --light-200: #e2e8f0;
+      --light-300: #cbd5e1;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+      --border-radius: 12px;
+      --border-radius-sm: 8px;
+      --border-radius-lg: 16px;
+      --border-radius-full: 9999px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 6px 12px -2px rgba(0, 0, 0, 0.1), 0 3px 6px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 20px -3px rgba(0, 0, 0, 0.1), 0 4px 8px -1px rgba(0, 0, 0, 0.06);
+      --shadow-xl: 0 20px 40px -4px rgba(0, 0, 0, 0.1), 0 8px 16px -2px rgba(0, 0, 0, 0.08);
+      --transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --z-dropdown: 1000;
+      --z-sticky: 1020;
+      --z-fixed: 1030;
+      --z-modal-backdrop: 1040;
+      --z-modal: 1050;
+      --z-popover: 1060;
+      --z-tooltip: 1070;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: var(--font-family);
+      background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%);
+      color: var(--light-200);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--light);
+      margin-bottom: var(--spacing-md);
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    h2 {
+      font-size: 2rem;
+    }
+    
+    h3 {
+      font-size: 1.5rem;
+    }
+    
+    h4 {
+      font-size: 1.25rem;
+    }
+    
+    p {
+      margin-bottom: var(--spacing-md);
+      color: var(--gray-400);
+    }
+    
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+    
+    a:hover {
+      color: var(--primary-dark);
+    }
+    
+    code, pre {
+      font-family: var(--font-mono);
+      background: var(--dark-800);
+      border-radius: var(--border-radius-sm);
+      padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    /* Top Bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--spacing-xl);
+      z-index: var(--z-fixed);
+      transition: all var(--transition);
+    }
+    
+    .top-bar.scrolled {
+      height: 56px;
+      background: rgba(15, 23, 42, 0.98);
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-lg);
+      flex: 1;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      text-decoration: none;
+    }
+    
+    .logo-icon {
+      color: var(--primary);
+      font-size: 1.5rem;
+      background: var(--primary-light);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--border-radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logo-text {
+      font-weight: 700;
+      font-size: 1.25rem;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      color: var(--gray-400);
+      font-size: 0.875rem;
+    }
+    
+    .breadcrumb-separator {
+      opacity: 0.5;
+    }
+    
+    .breadcrumb-current {
+      color: var(--light);
+      font-weight: 500;
+    }
+    
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-lg);
+    }
+    
+    /* Admin Actions */
+    .admin-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+    
+    .admin-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      padding: var(--spacing-sm) var(--spacing-md);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--border-radius-sm);
+      color: var(--gray-400);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+    
+    .admin-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .admin-btn:nth-child(1):hover {
+      background: rgba(76, 201, 240, 0.2);
+      border-color: rgba(76, 201, 240, 0.3);
+      color: var(--success);
+    }
+    
+    .admin-btn:nth-child(2):hover {
+      background: rgba(248, 150, 30, 0.2);
+      border-color: rgba(248, 150, 30, 0.3);
+      color: var(--warning);
+    }
+    
+    .admin-btn i {
+      font-size: 0.875rem;
+    }
+    
+    .separator {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Language Switcher */
+    .language-switcher {
+      position: relative;
+    }
+    
+    .lang-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--light);
+      padding: var(--spacing-sm) var(--spacing-md);
+      padding-right: 40px;
+      border-radius: var(--border-radius-sm);
+      font-size: 0.875rem;
+      cursor: pointer;
+      appearance: none;
+      transition: all var(--transition-fast);
+      min-width: 120px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+    }
+    
+    .lang-select:hover {
+      border-color: var(--primary);
+      background-color: rgba(67, 97, 238, 0.1);
+    }
+    
+    .lang-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+    
+    /* User Menu */
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--danger) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+      font-size: 0.875rem;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      transition: all var(--transition);
+    }
+    
+    .user-avatar:hover {
+      transform: scale(1.05);
+      border-color: var(--primary);
+    }
+    
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--gray-400);
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--border-radius-sm);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--light);
+      border-color: var(--danger-light);
+    }
+    
+    /* Main Content */
+    .main-content {
+      margin-top: 64px;
+      padding: var(--spacing-xl);
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeIn 0.4s ease;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Cards Base */
+    .card {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .card-header {
+      padding: var(--spacing-lg) var(--spacing-xl);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-title {
+      font-weight: 600;
+      font-size: 1.125rem;
+      color: white;
+    }
+    
+    .card-body {
+      padding: var(--spacing-xl);
+    }
+    
+    /* Forms Modernos */
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-weight: 500;
+      color: #cbd5e1;
+      font-size: 0.875rem;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: var(--spacing-md) var(--spacing-lg);
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--border-radius-sm);
+      color: white;
+      font-size: 0.875rem;
+      transition: var(--transition);
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+    
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      cursor: pointer;
+    }
+    
+    .toggle-switch input {
+      display: none;
+    }
+    
+    .toggle-slider {
+      width: 52px;
+      height: 28px;
+      background: #475569;
+      border-radius: 14px;
+      position: relative;
+      transition: var(--transition);
+    }
+    
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: var(--transition);
+    }
+    
+    .toggle-switch input:checked + .toggle-slider {
+      background: var(--primary);
+    }
+    
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+    
+    /* Botões Modernos */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm) var(--spacing-lg);
+      border-radius: var(--border-radius-sm);
+      font-weight: 500;
+      font-size: 0.875rem;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, var(--success) 0%, #38bdf8 100%);
+      color: white;
+      border-color: rgba(76, 201, 240, 0.3);
+    }
+    
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(76, 201, 240, 0.3);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger) 0%, #ec4899 100%);
+      color: white;
+      border-color: rgba(247, 37, 133, 0.3);
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(247, 37, 133, 0.3);
+    }
+    
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: var(--spacing-xs) var(--spacing-md);
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .status-badge.online {
+      background: rgba(76, 201, 240, 0.1);
+      color: var(--success);
+    }
+    
+    .status-badge.offline {
+      background: rgba(247, 37, 133, 0.1);
+      color: var(--danger);
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .status-badge.online .status-dot {
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    
+    .status-badge.offline .status-dot {
+      background: var(--danger);
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* Grid System */
+    .grid {
+      display: grid;
+      gap: var(--spacing-lg);
+    }
+    
+    .grid-cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    /* Back Link */
+    .btn-nevegation {
+      position: fixed;
+      bottom: var(--spacing-xl);
+      left: var(--spacing-xl);
+      z-index: var(--z-fixed);
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm) var(--spacing-md);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--border-radius-sm);
+      color: var(--gray-400);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all var(--transition);
+      backdrop-filter: blur(10px);
+    }
+    
+    .back-link:hover {
+      background: rgba(67, 97, 238, 0.1);
+      color: var(--primary);
+      border-color: var(--primary);
+      transform: translateX(-4px);
+    }
+    
+    /* Responsividade */
+    @media (max-width: 1024px) {
+      .grid-cols-2,
+      .grid-cols-3 {
+        grid-template-columns: 1fr;
+      }
       
-      <div class="perfil">
-          <% if user_signed_in? %>
-            <div class="d-flex align-items-center my-3">
-              <i class="fas fa-user-circle fa-2x me-2"></i>
-              <p class="m-0">Welcome, <strong><%= current_user.email %></strong>!</p>
-              <div class="btn-conteiner-perfil">
-                <% if current_user.admin? %>
-                  <%= link_to 'Manage Users', users_path, class: 'btn-manage_account' %>
-                <% end %>
-                <%= button_to 'Logout', destroy_user_session_path, method: :delete, class: 'btn-danger' %>
-              </div>
-            </div>
-          <% else %>
-            <%= link_to 'Login', new_user_session_path, class: 'btn btn-primary' %>
-          <% end %>
+      .admin-actions {
+        gap: var(--spacing-xs);
+      }
+      
+      .admin-btn span {
+        display: none;
+      }
+      
+      .admin-btn {
+        padding: var(--spacing-sm);
+        width: 40px;
+        height: 40px;
+        justify-content: center;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      :root {
+        --spacing-xl: 20px;
+        --spacing-lg: 16px;
+      }
+      
+      .top-bar {
+        padding: 0 var(--spacing-lg);
+        flex-wrap: wrap;
+        height: auto;
+        min-height: 64px;
+      }
+      
+      .top-bar-left {
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .breadcrumb {
+        display: none;
+      }
+      
+      .top-bar-right {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .main-content {
+        margin-top: 80px;
+        padding: var(--spacing-md);
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      h2 {
+        font-size: 1.75rem;
+      }
+      
+      .btn-nevegation {
+        position: static;
+        margin-top: var(--spacing-lg);
+      }
+      
+      .separator {
+        display: none;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .language-switcher {
+        display: none;
+      }
+      
+      .user-menu {
+        gap: var(--spacing-sm);
+      }
+      
+      .logout-btn span {
+        display: none;
+      }
+      
+      .logout-btn {
+        padding: var(--spacing-sm);
+        width: 40px;
+        height: 40px;
+        justify-content: center;
+      }
+    }
+    
+    /* Print Styles */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      
+      body {
+        background: white;
+        color: black;
+      }
+      
+      .top-bar,
+      .btn-nevegation {
+        display: none !important;
+      }
+      
+      .main-content {
+        margin-top: 0;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <% unless controller_name == "license" && ["new", "create"].include?(action_name) %>
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <div class="logo">
+          <i class="fas fa-satellite-dish logo-icon"></i>
+          <span class="logo-text">SoftexTV</span>
         </div>
-       
-
-        <div class="language mt-4">
-          <h4 class="text_language"><%= I18n.t('language') %></h4>
-          <%= form_with(url: url_for(locale: I18n.locale), method: :get, local: true) do %>
-            <%= select_tag :locale, options_for_select([['English', 'en'], ['Português', 'pt']], I18n.locale), onchange: 'this.form.submit();' %>
-          <% end %>
-        </div>
-      <% end %>
- <% end %>
-      <%= yield %>
-    </div>
-<% unless controller_name == "license" && (action_name == "new" || action_name == "create") %>  
-    <!-- Botão de voltar (condicional) -->
-    <% unless (controller_name == "broadcasts" && action_name == "index") ||
-              (controller_name == "users" && (action_name == "new" || action_name == "edit")) ||
-              (controller_name == "sessions" && action_name == "new") %>
-      <div class="btn-nevegation">
-        <%= link_to broadcasts_path, class: 'back-link' do %>
-          <i class="fas fa-arrow-left"></i> <%= I18n.t('Back') %>
+        
+        <% if controller_name == "broadcasts" && action_name == "edit" %>
+          <nav class="breadcrumb">
+            <%= link_to 'Broadcasts', broadcasts_path, style: "color: #94a3b8; text-decoration: none;" %>
+            <span class="breadcrumb-separator">›</span>
+            <span class="breadcrumb-current">Edit <%= @broadcast.name %></span>
+          </nav>
         <% end %>
       </div>
-    <% end %>
-<% end %>
-    <!-- Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+      
+      <div class="top-bar-right">
+        <!-- Botões de Admin -->
+        <% if current_user&.admin? %>
+          <div class="admin-actions">
+            <!-- Botão Export M3U -->
+            <%= link_to export_m3u_broadcasts_path,
+                  class: 'admin-btn',
+                  style: 'display: flex; align-items: center; gap: 8px; padding: 8px 16px; 
+                         background: rgba(76, 201, 240, 0.1); border: 1px solid rgba(76, 201, 240, 0.2);
+                         border-radius: var(--border-radius-sm); color: var(--success); 
+                         text-decoration: none; font-size: 14px; transition: all var(--transition);',
+                  data: { turbo: false } do %>
+              <i class="fas fa-file-export"></i>
+              <span>Export M3U</span>
+            <% end %>
+            
+            <!-- Botão Configuration -->
+            <%= link_to edit_streaming_configuration_path(1),
+                  class: 'admin-btn',
+                  style: 'display: flex; align-items: center; gap: 8px; padding: 8px 16px; 
+                         background: rgba(248, 150, 30, 0.1); border: 1px solid rgba(248, 150, 30, 0.2);
+                         border-radius: var(--border-radius-sm); color: var(--warning); 
+                         text-decoration: none; font-size: 14px; transition: all var(--transition);' do %>
+              <i class="fas fa-cog"></i>
+              <span>Configuration</span>
+            <% end %>
+          </div>
+          
+          <div class="separator"></div>
+        <% end %>
+        
+        <!-- Language Switcher -->
+        <div class="language-switcher">
+          <%= form_with(url: url_for(locale: I18n.locale), method: :get, local: true) do %>
+            <%= select_tag :locale, 
+                options_for_select([['🇺🇸 English', 'en'], ['🇧🇷 Português', 'pt']], I18n.locale), 
+                class: 'lang-select',
+                onchange: 'this.form.submit();' %>
+          <% end %>
+        </div>
+        
+        <!-- User Menu -->
+        <% if user_signed_in? %>
+          <div class="user-menu">
+            <div class="user-avatar">
+              <%= current_user.email[0].upcase %>
+            </div>
+            <%= button_to '🚪 Logout', destroy_user_session_path, 
+                method: :delete, 
+                class: 'logout-btn' %>
+          </div>
+        <% end %>
+      </div>
+    </header>
+  <% end %>
+  
+  <main class="main-content">
+    <%= yield %>
+  </main>
+  
+  <!-- Scripts Globais -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+  <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+  
+  <script>
+    // Inicializar Video.js players
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.video-js').forEach(video => {
+        videojs(video);
+      });
+      
+      // Adicionar listener para toggle de broadcast
+      document.querySelectorAll('.card-action-btn[data-broadcast_id]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const broadcastId = this.getAttribute('data-broadcast_id');
+          toggleBroadcast(broadcastId);
+        });
+      });
+    });
+  </script>
+</body>
 </html>
-
-<style>
-/* Seus estilos customizados aqui */
-</style>

@@ -1,20 +1,717 @@
-<!-- app/views/broadcasts/show.html.erb -->
-<h1>Broadcast Details</h1>
+<div class="show-broadcast-container">
+  <!-- Header com Breadcrumb -->
+  <div class="page-header" style="margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+      <div class="breadcrumb" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <%= link_to broadcasts_path, style: "color: #94a3b8; text-decoration: none; display: flex; align-items: center; gap: 4px;" do %>
+          <i class="fas fa-arrow-left"></i>
+          <span>Broadcasts</span>
+        <% end %>
+        <span style="color: #64748b;">/</span>
+        <span style="color: white; font-weight: 500;"><%= @broadcast.name %></span>
+      </div>
+      
+      <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">
+        <i class="fas fa-tv" style="color: var(--primary); margin-right: 12px;"></i>
+        <%= @broadcast.name %>
+      </h1>
+      <p style="color: #94a3b8;">
+        Detalhes e configurações do broadcast
+      </p>
+    </div>
+    
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <div class="status-badge <%= @broadcast.status == 'running' ? 'online' : 'offline' %>"
+           style="font-size: 14px; padding: 8px 16px;">
+        <span class="status-dot"></span>
+        <%= @broadcast.status == 'running' ? 'Transmitindo' : 'Parado' %>
+      </div>
+      
+      <%= link_to edit_broadcast_path(@broadcast),
+            class: 'btn btn-primary',
+            style: 'display: flex; align-items: center; gap: 8px;' do %>
+        <i class="fas fa-edit"></i>
+        Editar
+      <% end %>
+    </div>
+  </div>
 
-<p>
-  <strong>Name:</strong>
-  <%= @broadcast.name %>
-</p>
+  <!-- Grid Principal -->
+  <div class="grid grid-cols-3" style="gap: 24px; margin-bottom: 32px;">
+    
+    <!-- COLUNA 1: Informações do Broadcast -->
+    <div class="space-y-6">
+      <!-- Card de Detalhes -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-info-circle" style="margin-right: 10px;"></i>
+            Informações
+          </h2>
+        </div>
+        
+        <div class="card-body">
+          <div class="details-grid" style="display: grid; gap: 16px;">
+            <div class="detail-item">
+              <div style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">ID do Broadcast</div>
+              <div style="color: white; font-weight: 500; font-family: 'Monaco', monospace;">
+                <%= @broadcast.id %>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <div style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Criado em</div>
+              <div style="color: white; font-weight: 500;">
+                <%= @broadcast.created_at.strftime('%d/%m/%Y às %H:%M') %>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <div style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Última atualização</div>
+              <div style="color: white; font-weight: 500;">
+                <%= time_ago_in_words(@broadcast.updated_at) %> atrás
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <div style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Orientação</div>
+              <div style="color: white; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                <% if @broadcast.orientation == 'portrait' %>
+                  <i class="fas fa-mobile-alt" style="color: var(--primary);"></i>
+                  Retrato
+                <% else %>
+                  <i class="fas fa-desktop" style="color: var(--primary);"></i>
+                  Paisagem
+                <% end %>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <div style="color: #94a3b8; font-size: 12px; margin-bottom: 4px;">Widgets</div>
+              <div style="color: white; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                <% if @broadcast.show_widgets %>
+                  <i class="fas fa-toggle-on" style="color: var(--success);"></i>
+                  Ativados
+                <% else %>
+                  <i class="fas fa-toggle-off" style="color: #94a3b8;"></i>
+                  Desativados
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<p>
-  <strong>Video:</strong>
-  <%= @broadcast.video %>
-</p>
+      <!-- Card do Vídeo Principal -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-video" style="margin-right: 10px;"></i>
+            Vídeo Principal
+          </h2>
+        </div>
+        
+        <div class="card-body">
+          <% if @broadcast.video.attached? %>
+            <div class="video-info" 
+                 style="background: rgba(15, 23, 42, 0.5); padding: 16px; 
+                        border-radius: var(--border-radius-sm);">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="background: rgba(67, 97, 238, 0.2); width: 48px; height: 48px; 
+                     border-radius: 8px; display: flex; align-items: center; 
+                     justify-content: center;">
+                  <i class="fas fa-file-video" style="color: var(--primary); font-size: 20px;"></i>
+                </div>
+                <div style="flex: 1;">
+                  <div style="color: white; font-weight: 500; margin-bottom: 4px;">
+                    <%= @broadcast.video.filename %>
+                  </div>
+                  <div style="color: #94a3b8; font-size: 12px;">
+                    <%= number_to_human_size(@broadcast.video.byte_size) %> • 
+                    <%= @broadcast.video.content_type %>
+                  </div>
+                </div>
+              </div>
+              
+              <div style="display: flex; gap: 8px;">
+                <%= link_to url_for(@broadcast.video), 
+                      target: '_blank',
+                      class: 'btn',
+                      style: 'flex: 1; padding: 8px; font-size: 13px; 
+                             background: rgba(67, 97, 238, 0.2);' do %>
+                  <i class="fas fa-external-link-alt"></i>
+                  Abrir
+                <% end %>
+                
+                <%= link_to rails_blob_path(@broadcast.video, disposition: 'attachment'),
+                      class: 'btn',
+                      style: 'flex: 1; padding: 8px; font-size: 13px; 
+                             background: rgba(255, 255, 255, 0.1);' do %>
+                  <i class="fas fa-download"></i>
+                  Baixar
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+              <i class="fas fa-video-slash" style="font-size: 48px; margin-bottom: 16px;"></i>
+              <p>Nenhum vídeo carregado</p>
+              <p style="font-size: 13px; margin-top: 8px;">
+                Adicione um vídeo nas configurações de edição
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- COLUNA 2: Player e Controles -->
+    <div class="space-y-6">
+      <!-- Player de Vídeo -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-play-circle" style="margin-right: 10px;"></i>
+            Player
+          </h2>
+          <div style="display: flex; gap: 8px;">
+            <%= form_with(url: start_broadcast_path(@broadcast), 
+                  method: :post, 
+                  local: true,
+                  data: { turbo: false }) do %>
+              <%= button_tag type: 'submit',
+                    class: 'btn',
+                    style: 'padding: 6px 12px; font-size: 13px; 
+                           background: rgba(76, 201, 240, 0.2);' do %>
+                <i class="fas fa-play"></i>
+                Iniciar
+              <% end %>
+            <% end %>
+            
+            <%= form_with(url: stop_broadcast_path(@broadcast), 
+                  method: :post, 
+                  local: true,
+                  data: { turbo: false }) do %>
+              <%= button_tag type: 'submit',
+                    class: 'btn',
+                    style: 'padding: 6px 12px; font-size: 13px; 
+                           background: rgba(247, 37, 133, 0.2);' do %>
+                <i class="fas fa-stop"></i>
+                Parar
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <div class="video-player-container" 
+               style="background: #0f172a; border-radius: var(--border-radius-sm); 
+                      overflow: hidden; aspect-ratio: 16/9;">
+            <% if @broadcast.video.attached? %>
+              <video id="broadcast-player"
+                     class="video-js vjs-default-skin"
+                     controls
+                     preload="auto"
+                     style="width: 100%; height: 100%;">
+                <source src="<%= url_for(@broadcast.video) %>" type="<%= @broadcast.video.content_type %>">
+              </video>
+            <% else %>
+              <div style="display: flex; flex-direction: column; align-items: center; 
+                   justify-content: center; height: 100%; color: #64748b; text-align: center;">
+                <i class="fas fa-video-slash" style="font-size: 64px; margin-bottom: 16px;"></i>
+                <p>Nenhum vídeo disponível</p>
+                <p style="font-size: 13px; margin-top: 8px;">
+                  Faça upload de um vídeo para visualizar
+                </p>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- Controles Rápidos -->
+          <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <button onclick="restartVideo()"
+                    class="btn"
+                    style="padding: 8px; font-size: 13px; background: rgba(255, 255, 255, 0.1);">
+              <i class="fas fa-redo"></i>
+              Reiniciar
+            </button>
+            
+            <button onclick="toggleMute()"
+                    class="btn"
+                    style="padding: 8px; font-size: 13px; background: rgba(255, 255, 255, 0.1);">
+              <i class="fas fa-volume-mute"></i>
+              Silenciar
+            </button>
+            
+            <button onclick="toggleFullscreen()"
+                    class="btn"
+                    style="padding: 8px; font-size: 13px; background: rgba(255, 255, 255, 0.1);">
+              <i class="fas fa-expand"></i>
+              Tela Cheia
+            </button>
+          </div>
+        </div>
+      </div>
 
-<p>
-  <strong>Stream URL:</strong>
-  <%= @broadcast.stream_url %>
-</p>
+      <!-- Status da Transmissão -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-chart-line" style="margin-right: 10px;"></i>
+            Status da Transmissão
+          </h2>
+        </div>
+        
+        <div class="card-body">
+          <div class="status-metrics" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+            <div class="metric">
+              <div style="color: #94a3b8; font-size: 11px; margin-bottom: 4px;">CONECTADOS</div>
+              <div style="color: white; font-size: 20px; font-weight: 700;">0</div>
+            </div>
+            
+            <div class="metric">
+              <div style="color: #94a3b8; font-size: 11px; margin-bottom: 4px;">BITRATE</div>
+              <div style="color: white; font-size: 20px; font-weight: 700;">0 Mbps</div>
+            </div>
+            
+            <div class="metric">
+              <div style="color: #94a3b8; font-size: 11px; margin-bottom: 4px;">BUFFER</div>
+              <div style="color: white; font-size: 20px; font-weight: 700;">0 ms</div>
+            </div>
+            
+            <div class="metric">
+              <div style="color: #94a3b8; font-size: 11px; margin-bottom: 4px;">UPTIME</div>
+              <div style="color: white; font-size: 20px; font-weight: 700;">0h 00m</div>
+            </div>
+          </div>
+          
+          <!-- Barra de Progresso -->
+          <div style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: #94a3b8; font-size: 12px;">Status do Serviço</span>
+              <span style="color: <%= @broadcast.status == 'running' ? 'var(--success)' : 'var(--danger)' %>; 
+                    font-size: 12px; font-weight: 500;">
+                <%= @broadcast.status == 'running' ? 'Operacional' : 'Parado' %>
+              </span>
+            </div>
+            <div style="height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden;">
+              <div style="width: <%= @broadcast.status == 'running' ? '100%' : '0%' %>; 
+                   height: 100%; background: <%= @broadcast.status == 'running' ? 'var(--success)' : 'var(--danger)' %>;
+                   border-radius: 3px; transition: width 0.3s ease;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- COLUNA 3: Agendamentos e Ações -->
+    <div class="space-y-6">
+      <!-- Agendamentos Ativos -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-calendar-alt" style="margin-right: 10px;"></i>
+            Agendamentos
+            <span class="badge" 
+                  style="background: rgba(76, 201, 240, 0.2); color: var(--success); 
+                         padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 8px;">
+              <%= @schedules.count %>
+            </span>
+          </h2>
+        </div>
+        
+        <div class="card-body">
+          <% if @schedules.any? %>
+            <div class="schedules-list" style="max-height: 300px; overflow-y: auto;">
+              <% @schedules.each do |schedule| %>
+                <div class="schedule-item" 
+                     style="padding: 12px; background: rgba(15, 23, 42, 0.5); 
+                            border-radius: var(--border-radius-sm); margin-bottom: 8px;
+                            border-left: 4px solid var(--success); position: relative;">
+                  
+                  <!-- Indicador de Status Ativo -->
+                  <% if schedule.start <= Time.now && schedule.end >= Time.now %>
+                    <div style="position: absolute; top: 12px; right: 12px;">
+                      <div class="status-badge online" style="font-size: 10px; padding: 2px 6px;">
+                        <span class="status-dot"></span>
+                        Ativo
+                      </div>
+                    </div>
+                  <% end %>
+                  
+                  <div>
+                    <div style="color: white; font-weight: 500; font-size: 14px;">
+                      <i class="fas fa-calendar-day" style="margin-right: 8px;"></i>
+                      <%= schedule.start.strftime('%d/%m/%Y') %> → <%= schedule.end.strftime('%d/%m/%Y') %>
+                    </div>
+                    
+                    <% if schedule.video.attached? %>
+                      <div style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-video"></i>
+                        <%= schedule.video.filename %>
+                      </div>
+                    <% end %>
+                    
+                    <!-- Ações do Agendamento -->
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                      <button onclick="previewScheduleVideo(<%= schedule.id %>)"
+                              class="btn"
+                              style="padding: 4px 8px; font-size: 11px; 
+                                     background: rgba(67, 97, 238, 0.2);">
+                        <i class="fas fa-eye"></i>
+                        Visualizar
+                      </button>
+                      
+                      <button onclick="removeSchedule(<%= schedule.id %>)"
+                              class="btn"
+                              style="padding: 4px 8px; font-size: 11px; 
+                                     background: rgba(247, 37, 133, 0.2);">
+                        <i class="fas fa-trash"></i>
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+            
+            <!-- Botão para Adicionar Mais -->
+            <div style="margin-top: 16px;">
+              <%= link_to '➕ Adicionar Novo Agendamento', 
+                    '#',
+                    onclick: 'openScheduleModal()',
+                    class: 'btn btn-secondary',
+                    style: 'width: 100%; padding: 10px; font-size: 14px;' %>
+            </div>
+          <% else %>
+            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+              <i class="fas fa-calendar-plus" style="font-size: 48px; margin-bottom: 16px;"></i>
+              <p>Nenhum agendamento configurado</p>
+              <p style="font-size: 13px; margin-top: 8px;">
+                O vídeo principal será exibido continuamente
+              </p>
+              <%= link_to 'Criar Primeiro Agendamento', 
+                    '#',
+                    onclick: 'openScheduleModal()',
+                    class: 'btn btn-primary',
+                    style: 'margin-top: 16px;' %>
+            </div>
+          <% end %>
+        </div>
+      </div>
 
-<%= link_to 'Edit', edit_broadcast_path(@broadcast) %> |
-<%= link_to 'Back', broadcasts_path %>
+      <!-- URLs e Integração -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-link" style="margin-right: 10px;"></i>
+            URLs e Integração
+          </h2>
+        </div>
+        
+        <div class="card-body">
+          <!-- Stream URL -->
+          <div class="url-item" style="margin-bottom: 16px;">
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 6px;">
+              <i class="fas fa-stream" style="margin-right: 6px;"></i>
+              URL de Stream
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <code style="flex: 1; background: rgba(15, 23, 42, 0.5); padding: 8px 12px; 
+                    border-radius: var(--border-radius-sm); color: #bae6fd; font-size: 12px; 
+                    word-break: break-all; font-family: 'Monaco', monospace;">
+                <%= @broadcast.stream_url %>
+              </code>
+              <button onclick="copyToClipboard('<%= @broadcast.stream_url %>')"
+                      class="btn"
+                      style="padding: 8px 12px; background: rgba(67, 97, 238, 0.2);">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- API Endpoint -->
+          <div class="url-item">
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 6px;">
+              <i class="fas fa-code" style="margin-right: 6px;"></i>
+              Endpoint da API
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <code style="flex: 1; background: rgba(15, 23, 42, 0.5); padding: 8px 12px; 
+                    border-radius: var(--border-radius-sm); color: #bae6fd; font-size: 12px; 
+                    word-break: break-all; font-family: 'Monaco', monospace;">
+                /api/broadcasts/<%= @broadcast.id %>/status
+              </code>
+              <button onclick="copyToClipboard('/api/broadcasts/<%= @broadcast.id %>/status')"
+                      class="btn"
+                      style="padding: 8px 12px; background: rgba(67, 97, 238, 0.2);">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- QR Code para Mobile -->
+          <div style="margin-top: 20px; text-align: center; padding: 16px; 
+               background: rgba(15, 23, 42, 0.5); border-radius: var(--border-radius-sm);">
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 12px;">
+              <i class="fas fa-qrcode" style="margin-right: 6px;"></i>
+              QR Code para acesso rápido
+            </div>
+            <div id="qrcode" style="width: 120px; height: 120px; margin: 0 auto; 
+                 background: white; padding: 8px; border-radius: 8px;"></div>
+            <p style="color: #64748b; font-size: 11px; margin-top: 12px;">
+              Use este código para acessar em dispositivos móveis
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ações Destrutivas -->
+  <div class="danger-zone">
+    <div class="card" style="border-color: var(--danger); background: rgba(247, 37, 133, 0.05);">
+      <div class="card-header">
+        <h2 class="card-title" style="color: var(--danger);">
+          <i class="fas fa-exclamation-triangle"></i>
+          Zona de Perigo
+        </h2>
+      </div>
+      <div class="card-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="color: white; margin-bottom: 4px;">Excluir Broadcast</h3>
+            <p style="color: #fecdd3; font-size: 14px;">
+              Esta ação é irreversível. Todos os agendamentos e configurações serão perdidos.
+            </p>
+          </div>
+          <%= button_to '🗑️ Excluir Permanentemente', 
+                broadcast_path(@broadcast), 
+                method: :delete, 
+                class: 'btn btn-danger',
+                data: { 
+                  confirm: 'Tem certeza que deseja excluir este broadcast? Esta ação não pode ser desfeita.',
+                  turbo_confirm: 'Tem certeza que deseja excluir este broadcast? Esta ação não pode ser desfeita.'
+                } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Schedule (será carregado dinamicamente) -->
+<div id="schedule-modal-container"></div>
+
+<!-- QR Code Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<script>
+  // Inicializar Video.js Player
+  document.addEventListener('DOMContentLoaded', function() {
+    // Player de vídeo
+    if (document.getElementById('broadcast-player')) {
+      const player = videojs('broadcast-player', {
+        fluid: true,
+        controls: true,
+        autoplay: false,
+        preload: 'auto',
+        playbackRates: [0.5, 1, 1.5, 2]
+      });
+      
+      window.player = player;
+    }
+    
+    // Gerar QR Code
+    if (document.getElementById('qrcode')) {
+      const streamUrl = '<%= @broadcast.stream_url %>';
+      QRCode.toCanvas(document.getElementById('qrcode'), streamUrl, {
+        width: 100,
+        height: 100,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      }, function(error) {
+        if (error) {
+          console.error('Erro ao gerar QR Code:', error);
+          document.getElementById('qrcode').innerHTML = 
+            '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #64748b;">QR Code</div>';
+        }
+      });
+    }
+    
+    // Atualizar métricas em tempo real (simulação)
+    if ('<%= @broadcast.status %>' === 'running') {
+      startMetricsSimulation();
+    }
+  });
+  
+  // Funções de controle do player
+  function restartVideo() {
+    if (window.player) {
+      window.player.currentTime(0);
+      window.player.play();
+    }
+  }
+  
+  function toggleMute() {
+    if (window.player) {
+      window.player.muted(!window.player.muted());
+    }
+  }
+  
+  function toggleFullscreen() {
+    if (window.player) {
+      if (window.player.isFullscreen()) {
+        window.player.exitFullscreen();
+      } else {
+        window.player.requestFullscreen();
+      }
+    }
+  }
+  
+  // Funções de agendamento
+  function openScheduleModal() {
+    fetch('<%= schedule_modal_broadcast_path(@broadcast) %>')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('schedule-modal-container').innerHTML = html;
+        document.getElementById('schedule-modal-container').querySelector('.modal-overlay').style.display = 'flex';
+      });
+  }
+  
+  function previewScheduleVideo(scheduleId) {
+    // Implementar preview do vídeo do agendamento
+    alert('Visualizando vídeo do agendamento ' + scheduleId);
+  }
+  
+  function removeSchedule(scheduleId) {
+    if (confirm('Tem certeza que deseja remover este agendamento?')) {
+      fetch('/schedules/destroy_schedule', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ id: scheduleId })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        }
+      });
+    }
+  }
+  
+  // Funções utilitárias
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      showNotification('Copiado para a área de transferência!');
+    });
+  }
+  
+  function showNotification(message, type = 'success') {
+    // Implementação básica de notificação
+    const notification = document.createElement('div');
+    notification.innerHTML = `
+      <div style="position: fixed; top: 100px; right: 24px; z-index: 9999;
+           background: ${type === 'success' ? 'rgba(76, 201, 240, 0.9)' : 'rgba(247, 37, 133, 0.9)'}; 
+           color: white; padding: 12px 20px; border-radius: var(--border-radius-sm);
+           box-shadow: var(--shadow-lg); backdrop-filter: blur(10px); 
+           animation: slideInRight 0.3s ease;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+          <span>${message}</span>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.animation = 'slideOutRight 0.3s ease';
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+  
+  // Simulação de métricas em tempo real
+  function startMetricsSimulation() {
+    setInterval(() => {
+      if (document.querySelectorAll('.metric').length) {
+        // Atualizar número de conectados (aleatório entre 0-50)
+        const connectedElement = document.querySelector('.metric:nth-child(1) div:last-child');
+        if (connectedElement) {
+          const current = parseInt(connectedElement.textContent) || 0;
+          const change = Math.random() > 0.5 ? 1 : -1;
+          const newValue = Math.max(0, current + change);
+          connectedElement.textContent = newValue;
+        }
+        
+        // Atualizar bitrate (aleatório entre 0-10 Mbps)
+        const bitrateElement = document.querySelector('.metric:nth-child(2) div:last-child');
+        if (bitrateElement) {
+          const bitrate = (Math.random() * 10).toFixed(1);
+          bitrateElement.textContent = bitrate + ' Mbps';
+        }
+        
+        // Atualizar buffer (aleatório entre 0-100 ms)
+        const bufferElement = document.querySelector('.metric:nth-child(3) div:last-child');
+        if (bufferElement) {
+          const buffer = Math.floor(Math.random() * 100);
+          bufferElement.textContent = buffer + ' ms';
+        }
+      }
+    }, 2000);
+  }
+</script>
+
+<style>
+  .show-broadcast-container {
+    animation: fadeIn 0.4s ease;
+  }
+  
+  @keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+  
+  .schedules-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .schedules-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+  
+  .schedules-list::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  
+  .danger-zone {
+    margin-top: 32px;
+  }
+  
+  /* Estilos responsivos */
+  @media (max-width: 1200px) {
+    .grid.grid-cols-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
